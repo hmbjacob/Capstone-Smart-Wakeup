@@ -1,27 +1,8 @@
 {
     "logs": [
         {
-            "outputFile": "C:\\Users\\steven\\Desktop\\connectivity-samples-main\\BluetoothChat\\Application\\build\\intermediates\\incremental\\mergeDebugResources\\merged.dir\\values\\values.xml",
+            "outputFile": "C:\\Users\\steven\\Documents\\GitHub\\dreamteam9\\network\\BluetoothChat\\Application\\build\\intermediates\\incremental\\mergeDebugResources\\merged.dir\\values\\values.xml",
             "map": [
-                {
-                    "source": "C:\\Users\\steven\\Desktop\\connectivity-samples-main\\BluetoothChat\\Application\\src\\main\\res\\values\\base-strings.xml",
-                    "from": {
-                        "startLines": "18,19",
-                        "startColumns": "4,4",
-                        "startOffsets": "647,698",
-                        "endLines": "18,33",
-                        "endColumns": "50,13",
-                        "endOffsets": "693,1296"
-                    },
-                    "to": {
-                        "startLines": "284,289",
-                        "startColumns": "4,4",
-                        "startOffsets": "18485,18827",
-                        "endLines": "284,303",
-                        "endColumns": "50,13",
-                        "endOffsets": "18531,19425"
-                    }
-                },
                 {
                     "source": "C:\\Users\\steven\\.gradle\\caches\\transforms-2\\files-2.1\\9f7e7a548ad00e2e3c3268a409525997\\appcompat-1.1.0\\res\\values\\values.xml",
                     "from": {
@@ -42,7 +23,26 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\steven\\Desktop\\connectivity-samples-main\\BluetoothChat\\Application\\src\\main\\res\\values\\strings.xml",
+                    "source": "C:\\Users\\steven\\Documents\\GitHub\\dreamteam9\\network\\BluetoothChat\\Application\\src\\main\\res\\values\\base-strings.xml",
+                    "from": {
+                        "startLines": "18,19",
+                        "startColumns": "4,4",
+                        "startOffsets": "647,698",
+                        "endLines": "18,33",
+                        "endColumns": "50,13",
+                        "endOffsets": "693,1296"
+                    },
+                    "to": {
+                        "startLines": "284,289",
+                        "startColumns": "4,4",
+                        "startOffsets": "18485,18827",
+                        "endLines": "284,303",
+                        "endColumns": "50,13",
+                        "endOffsets": "18531,19425"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\steven\\Documents\\GitHub\\dreamteam9\\network\\BluetoothChat\\Application\\src\\main\\res\\values\\strings.xml",
                     "from": {
                         "startLines": "21,33,38,37,30,29,20,27,36,28,19,23,22,24,32,31",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
@@ -59,7 +59,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\steven\\Desktop\\connectivity-samples-main\\BluetoothChat\\Application\\src\\main\\res\\values\\fragmentview_strings.xml",
+                    "source": "C:\\Users\\steven\\Documents\\GitHub\\dreamteam9\\network\\BluetoothChat\\Application\\src\\main\\res\\values\\fragmentview_strings.xml",
                     "from": {
                         "startLines": "17,16",
                         "startColumns": "4,4",
@@ -76,20 +76,22 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\steven\\Desktop\\connectivity-samples-main\\BluetoothChat\\Application\\src\\main\\res\\values\\template-dimens.xml",
+                    "source": "C:\\Users\\steven\\Documents\\GitHub\\dreamteam9\\network\\BluetoothChat\\Application\\src\\main\\res\\values\\template-styles.xml",
                     "from": {
-                        "startLines": "28,24,23,22,21,20,29",
-                        "startColumns": "4,4,4,4,4,4,4",
-                        "startOffsets": "959,880,836,791,748,706,1029",
-                        "endColumns": "69,42,43,44,42,41,67",
-                        "endOffsets": "1024,918,875,831,786,743,1092"
+                        "startLines": "24,20,22,27,29,34",
+                        "startColumns": "4,4,4,4,4,4",
+                        "startOffsets": "768,651,713,849,878,1075",
+                        "endLines": "24,20,22,27,32,39",
+                        "endColumns": "51,60,53,27,12,12",
+                        "endOffsets": "815,707,762,872,1069,1348"
                     },
                     "to": {
-                        "startLines": "165,166,167,168,169,170,194",
-                        "startColumns": "4,4,4,4,4,4,4",
-                        "startOffsets": "11354,11424,11467,11511,11556,11599,13072",
-                        "endColumns": "69,42,43,44,42,41,67",
-                        "endOffsets": "11419,11462,11506,11551,11594,11636,13135"
+                        "startLines": "325,1712,1713,1726,1824,1828",
+                        "startColumns": "4,4,4,4,4,4",
+                        "startOffsets": "20893,114594,114654,115710,123532,123728",
+                        "endLines": "325,1712,1713,1726,1827,1833",
+                        "endColumns": "50,59,52,26,12,12",
+                        "endOffsets": "20939,114649,114702,115732,123723,124001"
                     }
                 },
                 {
@@ -131,22 +133,20 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\steven\\Desktop\\connectivity-samples-main\\BluetoothChat\\Application\\src\\main\\res\\values\\template-styles.xml",
+                    "source": "C:\\Users\\steven\\Documents\\GitHub\\dreamteam9\\network\\BluetoothChat\\Application\\src\\main\\res\\values\\template-dimens.xml",
                     "from": {
-                        "startLines": "24,20,22,27,29,34",
-                        "startColumns": "4,4,4,4,4,4",
-                        "startOffsets": "768,651,713,849,878,1075",
-                        "endLines": "24,20,22,27,32,39",
-                        "endColumns": "51,60,53,27,12,12",
-                        "endOffsets": "815,707,762,872,1069,1348"
+                        "startLines": "28,24,23,22,21,20,29",
+                        "startColumns": "4,4,4,4,4,4,4",
+                        "startOffsets": "959,880,836,791,748,706,1029",
+                        "endColumns": "69,42,43,44,42,41,67",
+                        "endOffsets": "1024,918,875,831,786,743,1092"
                     },
                     "to": {
-                        "startLines": "325,1712,1713,1726,1824,1828",
-                        "startColumns": "4,4,4,4,4,4",
-                        "startOffsets": "20893,114594,114654,115710,123532,123728",
-                        "endLines": "325,1712,1713,1726,1827,1833",
-                        "endColumns": "50,59,52,26,12,12",
-                        "endOffsets": "20939,114649,114702,115732,123723,124001"
+                        "startLines": "165,166,167,168,169,170,194",
+                        "startColumns": "4,4,4,4,4,4,4",
+                        "startOffsets": "11354,11424,11467,11511,11556,11599,13072",
+                        "endColumns": "69,42,43,44,42,41,67",
+                        "endOffsets": "11419,11462,11506,11551,11594,11636,13135"
                     }
                 }
             ]

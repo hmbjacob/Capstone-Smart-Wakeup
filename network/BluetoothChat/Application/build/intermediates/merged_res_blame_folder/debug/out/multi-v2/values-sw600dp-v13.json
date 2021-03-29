@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "C:\\Users\\steven\\Desktop\\connectivity-samples-main\\BluetoothChat\\Application\\build\\intermediates\\incremental\\mergeDebugResources\\merged.dir\\values-sw600dp-v13\\values-sw600dp-v13.xml",
+            "outputFile": "C:\\Users\\steven\\Documents\\GitHub\\dreamteam9\\network\\BluetoothChat\\Application\\build\\intermediates\\incremental\\mergeDebugResources\\merged.dir\\values-sw600dp-v13\\values-sw600dp-v13.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\steven\\Desktop\\connectivity-samples-main\\BluetoothChat\\Application\\src\\main\\res\\values-sw600dp\\template-dimens.xml",
+                    "source": "C:\\Users\\steven\\Documents\\GitHub\\dreamteam9\\network\\BluetoothChat\\Application\\src\\main\\res\\values-sw600dp\\template-dimens.xml",
                     "from": {
                         "startLines": "20,21",
                         "startColumns": "4,4",
@@ -21,7 +21,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\steven\\Desktop\\connectivity-samples-main\\BluetoothChat\\Application\\src\\main\\res\\values-sw600dp\\template-styles.xml",
+                    "source": "C:\\Users\\steven\\Documents\\GitHub\\dreamteam9\\network\\BluetoothChat\\Application\\src\\main\\res\\values-sw600dp\\template-styles.xml",
                     "from": {
                         "startLines": "18",
                         "startColumns": "4",

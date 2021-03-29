@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "C:\\Users\\steven\\Desktop\\connectivity-samples-main\\BluetoothChat\\Application\\build\\intermediates\\incremental\\mergeDebugResources\\merged.dir\\values-v11\\values-v11.xml",
+            "outputFile": "C:\\Users\\steven\\Documents\\GitHub\\dreamteam9\\network\\BluetoothChat\\Application\\build\\intermediates\\incremental\\mergeDebugResources\\merged.dir\\values-v11\\values-v11.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\steven\\Desktop\\connectivity-samples-main\\BluetoothChat\\Application\\src\\main\\res\\values-v11\\template-styles.xml",
+                    "source": "C:\\Users\\steven\\Documents\\GitHub\\dreamteam9\\network\\BluetoothChat\\Application\\src\\main\\res\\values-v11\\template-styles.xml",
                     "from": {
                         "startLines": "19",
                         "startColumns": "4",

@@ -1,4 +1,4 @@
-#Fri Feb 26 11:25:44 PST 2021
-base.0=C\:\\Users\\steven\\Desktop\\connectivity-samples-main\\BluetoothChat\\Application\\build\\intermediates\\dex\\debug\\mergeDexDebug\\classes.dex
+#Mon Mar 29 11:51:42 PDT 2021
+base.0=C\:\\Users\\steven\\Documents\\GitHub\\dreamteam9\\network\\BluetoothChat\\Application\\build\\intermediates\\dex\\debug\\mergeDexDebug\\classes.dex
 path.0=classes.dex
 renamed.0=classes.dex

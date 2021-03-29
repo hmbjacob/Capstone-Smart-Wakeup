@@ -30,7 +30,6 @@ com/example/android/common/logger/LogView.java
  com.example.android.common.logger.LogView$1
 com/example/android/bluetoothchat/BluetoothChatService.java
  com.example.android.bluetoothchat.BluetoothChatService
- com.example.android.bluetoothchat.BluetoothChatService$AcceptThread
  com.example.android.bluetoothchat.BluetoothChatService$ConnectThread
  com.example.android.bluetoothchat.BluetoothChatService$ConnectedThread
 com/example/android/bluetoothchat/Constants.java

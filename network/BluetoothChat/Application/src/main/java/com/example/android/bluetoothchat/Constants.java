@@ -29,7 +29,7 @@ public interface Constants {
     int MESSAGE_TOAST = 5;
 
     // Key names received from the BluetoothChatService Handler
-    String DEVICE_NAME = "device_name";
+    String DEVICE_NAME = "pixel";
     String TOAST = "toast";
 
 }
