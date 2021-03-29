@@ -38,16 +38,38 @@ try:
         data = client_sock.recv(1024)
         if not data:
             break
-        temp=(str(data).strip('b')).strip("'")
-        print("Received", temp)
-        temp+= ' Balsalm'
-        print("Sending", temp)
-        client_sock.send(str.encode(temp))
-except OSError:
-    pass
+        code=str(data)[2]
+        print(data)
+        if code=='1': # change settings
+            print('changed settings')
+            client_sock.send(str.encode('1'))
+        if code=='2': # requested file
+            try:
+                with open("New","rb") as f: #add file called new to your directory to transfer it
+                    print('opened file')
+                    client_sock.send(str.encode(code))
+                    print('sent opcode for sending file')
+                    bytes=1
+                    while bytes:
+                        data = client_sock.recv(1024)
+                        code=str(data)[2]
+                        if code=='1': #end received data
+                            print('phone received data')
+                            bytes=f.read(1000)
+                            print(len(bytes))
+                            #bytes.insert(0,len(bytes))
+                            client_sock.send(bytes)
+                        else:
+                            break
+                    print('finished sending')
+            except:
+                   client_sock.send(str.encode('3')) 
+            #client_sock.send(str.encode(temp))
+except OSError as err:
+    print("OS error: {0}".format(err))
 
-print("Disconnected.")
+
 
 client_sock.close()
 server_sock.close()
-print("All done.")
+print("All closed.")
