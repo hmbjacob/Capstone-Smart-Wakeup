@@ -28,9 +28,11 @@ import android.os.Message;
 
 import com.example.android.common.logger.Log;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -52,10 +54,7 @@ public class BluetoothChatService {
     private static final String NAME_INSECURE = "BluetoothChatInsecure";
 
     // Unique UUID for this application
-    private static final UUID MY_UUID_SECURE =
-            UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ee");
-    private static final UUID MY_UUID_INSECURE =
-            UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ee");
+    private static final UUID MY_UUID = UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ee");
 
     // Member fields
     private final BluetoothAdapter mAdapter;
@@ -64,6 +63,7 @@ public class BluetoothChatService {
     private ConnectedThread mConnectedThread;
     private int mState;
     private int mNewState;
+    private Context mContext;
 
     // Constants that indicate the current connection state
     public static final int STATE_NONE = 0;       // we're doing nothing
@@ -82,6 +82,7 @@ public class BluetoothChatService {
         mState = STATE_NONE;
         mNewState = mState;
         mHandler = handler;
+        mContext=context;
     }
 
     /**
@@ -129,9 +130,8 @@ public class BluetoothChatService {
      * Start the ConnectThread to initiate a connection to a remote device.
      *
      * @param device The BluetoothDevice to connect
-     * @param secure Socket Security type - Secure (true) , Insecure (false)
      */
-    public synchronized void connect(BluetoothDevice device, boolean secure) {
+    public synchronized void connect(BluetoothDevice device) {
         Log.d(TAG, "connect to: " + device);
 
         // Cancel any thread attempting to make a connection
@@ -141,7 +141,6 @@ public class BluetoothChatService {
                 mConnectThread = null;
             }
         }
-
         // Cancel any thread currently running a connection
         if (mConnectedThread != null) {
             mConnectedThread.cancel();
@@ -149,7 +148,7 @@ public class BluetoothChatService {
         }
 
         // Start the thread to connect with the given device
-        mConnectThread = new ConnectThread(device, secure);
+        mConnectThread = new ConnectThread(device);
         mConnectThread.start();
         // Update UI title
         updateUserInterfaceTitle();
@@ -161,16 +160,14 @@ public class BluetoothChatService {
      * @param socket The BluetoothSocket on which the connection was made
      * @param device The BluetoothDevice that has been connected
      */
-    public synchronized void connected(BluetoothSocket socket, BluetoothDevice
-            device, final String socketType) {
-        Log.d(TAG, "connected, Socket Type:" + socketType);
+    public synchronized void connected(BluetoothSocket socket, BluetoothDevice device) {
+        Log.d(TAG, "connected, Socket Type:");
 
         // Cancel the thread that completed the connection
         if (mConnectThread != null) {
             mConnectThread.cancel();
             mConnectThread = null;
         }
-
         // Cancel any thread currently running a connection
         if (mConnectedThread != null) {
             mConnectedThread.cancel();
@@ -179,7 +176,7 @@ public class BluetoothChatService {
 
 
         // Start the thread to manage the connection and perform transmissions
-        mConnectedThread = new ConnectedThread(socket, socketType);
+        mConnectedThread = new ConnectedThread(socket);
         mConnectedThread.start();
 
         // Send the name of the connected device back to the UI Activity
@@ -277,33 +274,25 @@ public class BluetoothChatService {
     private class ConnectThread extends Thread {
         private final BluetoothSocket mmSocket;
         private final BluetoothDevice mmDevice;
-        private String mSocketType;
 
-        public ConnectThread(BluetoothDevice device, boolean secure) {
+        public ConnectThread(BluetoothDevice device) {
             mmDevice = device;
             BluetoothSocket tmp = null;
-            mSocketType = secure ? "Secure" : "Insecure";
 
             // Get a BluetoothSocket for a connection with the
             // given BluetoothDevice
             try {
-                if (secure) {
-                    tmp = device.createRfcommSocketToServiceRecord(
-                            MY_UUID_SECURE);
-                } else {
-                    tmp = device.createInsecureRfcommSocketToServiceRecord(
-                            MY_UUID_INSECURE);
-                }
+                 tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
             } catch (IOException e) {
-                Log.e(TAG, "Socket Type: " + mSocketType + "create() failed", e);
+                Log.e(TAG, "Socket create failed", e);
             }
             mmSocket = tmp;
             mState = STATE_CONNECTING;
         }
 
         public void run() {
-            Log.i(TAG, "BEGIN mConnectThread SocketType:" + mSocketType);
-            setName("ConnectThread" + mSocketType);
+            Log.i(TAG, "BEGIN mConnectThread");
+            setName("ConnectThread");
 
 
             // Always cancel discovery because it will slow down a connection
@@ -319,8 +308,7 @@ public class BluetoothChatService {
                 try {
                     mmSocket.close();
                 } catch (IOException e2) {
-                    Log.e(TAG, "unable to close() " + mSocketType +
-                            " socket during connection failure", e2);
+                    Log.e(TAG, "unable to close() socket during connection failure", e2);
                 }
                 connectionFailed();
                 return;
@@ -332,14 +320,14 @@ public class BluetoothChatService {
             }
 
             // Start the connected thread
-            connected(mmSocket, mmDevice, mSocketType);
+            connected(mmSocket, mmDevice);
         }
 
         public void cancel() {
             try {
                 mmSocket.close();
             } catch (IOException e) {
-                Log.e(TAG, "close() of connect " + mSocketType + " socket failed", e);
+                Log.e(TAG, "close() of connect socket failed", e);
             }
         }
     }
@@ -353,8 +341,8 @@ public class BluetoothChatService {
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
 
-        public ConnectedThread(BluetoothSocket socket, String socketType) {
-            Log.d(TAG, "create ConnectedThread: " + socketType);
+        public ConnectedThread(BluetoothSocket socket) {
+            Log.d(TAG, "create ConnectedThread:");
             mmSocket = socket;
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
@@ -371,12 +359,15 @@ public class BluetoothChatService {
             mmOutStream = tmpOut;
             mState = STATE_CONNECTED;
         }
-
+        /*
+                MY CODE
+         */
         public void run() {
             Log.i(TAG, "BEGIN mConnectedThread");
             byte[] buffer = new byte[1024];
             int bytes;
-
+            File outputDir = mContext.getCacheDir();
+            String dataFile = outputDir + "/" + File.separator + "test.txt";
             // Keep listening to the InputStream while connected
             while (mState == STATE_CONNECTED) {
                 try {
@@ -386,33 +377,65 @@ public class BluetoothChatService {
                     // construct a string from the valid bytes in the buffer
                     int opcode = (int)buffer[0];
                     switch(opcode){
-                        case 50:
-                            Log.d(TAG, "tell pi you want the file");
-
+                        case 50: //received OK to start receiving file contents
                             mHandler.obtainMessage(Constants.MESSAGE_READ, bytes, -1, buffer)
                                     .sendToTarget();
                             Log.d(TAG, "before");
                             File output;
-                            output = new File(Environment.getExternalStorageDirectory() + "/" + File.separator + "test.txt");
+
+                            output = new File(dataFile);
                             OutputStream fo;
                             try{
-                                fo = new FileOutputStream(output);
+                                fo = new FileOutputStream(output,false);
                             } catch (FileNotFoundException e) {
                                 e.printStackTrace();
+                                break;
                             }
-                            /*
-
                             Log.d(TAG,"file created: "+output);
-                            byte[] sendOP = "1".getBytes(); //opcode for telling pi you received data
+
+                            Log.d(TAG, "tell pi you want the file");
+                            byte[] sendOP = "4".getBytes(); //opcode for telling pi you received data
                             mmOutStream.write(sendOP);
-                            while(mmInStream.read(buffer)>0){
-                                Log.d(TAG, "received data!!!!");
-                                fo.write(Arrays.copyOfRange(buffer,1,buffer.length));
-                                sendOP = "1".getBytes();
-                                mmOutStream.write(sendOP);
+                            int broken=0;
+                            int r=0;
+                            /*
+                            This Loop continuously receives either opcodes or chunks of data.
+                            To control data flow, waits for opcode (len=1) from sender
+                             */
+                            while(broken==0 && (r=mmInStream.read(buffer))>0){
+                                Log.d(TAG, "received data, code="+(int)buffer[0]);
+                                Log.d(TAG, "len= "+r);
+                                if(r == 1) { //received opcode
+                                    if((int) buffer[0] ==4){
+                                        Log.d(TAG, "breaking out");
+                                        broken = 1;
+                                        break;
+                                    }
+                                    else{
+                                        fo.write(buffer,0,1);
+                                        Log.d(TAG, "wrote to file");
+                                        mmOutStream.write(sendOP);
+                                    }
+                                }
+                                else{ //received file contents
+                                    fo.write(buffer,0,r);
+                                    Log.d(TAG, "wrote to file");
+                                    mmOutStream.write(sendOP);
+                                }
+
                             }
                             fo.close();
-                            */
+                            try {
+                                BufferedReader br = new BufferedReader(new FileReader(dataFile));
+                                String line;
+                                while ((line = br.readLine()) != null) {
+                                    System.out.println(line);
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                            Log.d(TAG, "finished getting file");
                         case 51:
                             break;
                         case 49:

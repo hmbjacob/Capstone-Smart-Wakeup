@@ -8,6 +8,7 @@ $Id: rfcomm-server.py 518 2007-08-10 07:20:07Z albert $
 import bluetooth
 import subprocess
 import sys
+import time
 try:
         subprocess.call(['sudo', 'hciconfig', 'hci0', 'piscan'])
 except:
@@ -43,7 +44,7 @@ try:
         if code=='1': # change settings
             print('changed settings')
             client_sock.send(str.encode('1'))
-        if code=='2': # requested file
+        elif code=='2': # requested file
             try:
                 with open("New","rb") as f: #add file called new to your directory to transfer it
                     print('opened file')
@@ -51,19 +52,20 @@ try:
                     print('sent opcode for sending file')
                     bytes=1
                     while bytes:
+                        time.sleep(0.5)
+                        #prevent sending data too quickly. Android can't handle it for some reason
+                        #this just makes sure for every 1000 bytes sent, we get a response at least once
                         data = client_sock.recv(1024)
-                        code=str(data)[2]
-                        if code=='1': #end received data
-                            print('phone received data')
-                            bytes=f.read(1000)
-                            print(len(bytes))
-                            #bytes.insert(0,len(bytes))
-                            client_sock.send(bytes)
-                        else:
-                            break
+                        print('phone received data')
+                        bytes=f.read(1000)
+                        print(len(bytes))
+                        client_sock.send(bytes)
+                        print('sent')
                     print('finished sending')
-            except:
-                   client_sock.send(str.encode('3')) 
+                    client_sock.send(str.encode('\x04'))
+            except OSError as err:
+                    print("OS error: {0}".format(err))
+                    client_sock.send(str.encode('3')) 
             #client_sock.send(str.encode(temp))
 except OSError as err:
     print("OS error: {0}".format(err))
