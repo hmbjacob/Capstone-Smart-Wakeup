@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 
 #define IDLE 0
@@ -26,7 +27,7 @@ int main(){
     int state = 0;
 
     while (1) {
-        char inputString[62] = "";\
+        char inputString[62] = "";
         //==================
         // NOTE: These two variables need to be modified in the future
         //       The first test set these variables from terminal input 
@@ -37,8 +38,9 @@ int main(){
         int Systime = 200;
         int Input_time;
         int BPM;
-        bool Alarm = FALSE;
-        bool Sync_Data = FALSE;
+        int Light_Switch;
+        bool Alarm = false;
+        bool Sync_Data = false;
         // Start_time: record when the start sequence start.
         // Current_BPM: record the current BPM when the sequence starts
         // N: Count number, start with 1
