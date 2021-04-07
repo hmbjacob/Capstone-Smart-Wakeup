@@ -50,21 +50,29 @@ int main(){
         int N;
         fgets(inputString, 62, stdin); //get the input & save
         //printf("%s", inputString);
-        if(inputString=="LIGHT"){
+        if(strcmp(inputString,"LIGHT\n")==0){
             Sleep_State = LIGHT;
-        } else if(inputString=="DEEP"){
+        } else if(strcmp(inputString,"DEEP\n")==0){
             Sleep_State = DEEP;
-        } else if(inputString=="WAKE"){
+        } else if(strcmp(inputString,"WAKE\n")==0){
             Sleep_State = WAKE;
-        } else if(inputString=="200"){
+        } else if(strcmp(inputString,"200\n")==0){
             Input_time = 200;
-        } else if(inputString=="240"){
+        } else if(strcmp(inputString,"240\n")==0){
             Input_time = 240;
-        } else if(inputString=="260"){
+        } else if(strcmp(inputString,"260\n")==0){
             Input_time = 260;
-        } else if(inputString=="270"){
+        } else if(strcmp(inputString,"270\n")==0){
             Input_time = 270;
+        } else if(strcmp(inputString,"ON\n")==0){
+            Light_Switch = ON;
+        } else if(strcmp(inputString,"OFF\n")==0){
+            Light_Switch = OFF;
         }
+
+        Input_time = atoi(inputString);
+        //printf("INPUT TIME: %d\n", Input_time);
+
         char *pointerToString = strtok(inputString, " "); //initial split the string
 
         while (pointerToString != NULL) { //split till the end by while-loop
@@ -76,18 +84,21 @@ int main(){
 
             case IDLE:{
 
+                // if the device is set to manual mode, change state to manual state
+                if(Light_Switch == ON){
+                    printf("in state IDLE, next state MANUAL_LIGHT\n");
+                    state = MANUAL_LIGHT;
+        
                 // If the user is wake or ECG is off, stay in the IDLE state
-                if(Sleep_State==WAKE || ECG_Status == OFF){
+                } else if(Sleep_State==WAKE || ECG_Status == OFF){
                     printf("in state IDLE, next state IDLE\n");
                     state = IDLE;
+
                 // If the user fall asleep, change the state to SLEEP state
                 } else if(Sleep_State==LIGHT || Sleep_State == DEEP){
                     printf("in state IDLE, next state SLEEP\n");
                     state = SLEEP;
-                // if the device is set to manual mode, change state to manual state
-                } else if(Light_Switch == ON){
-                    printf("in state IDLE, next state MANUAL_LIGHT\n");
-                    state = MANUAL_LIGHT;
+                
                 // Otherwise, stay in the same state
                 } else {
                     printf("in state IDLE, next state IDLE\n");
@@ -163,7 +174,7 @@ int main(){
                 } else if(Light_Switch==ON){
                     state = MANUAL_LIGHT; 
                     printf("in state WAKING, next state MANUAL_LIGHT\n");
-                } else if((Sleep_State==WAKE)&&(Systime<Input_time)){
+                } else if((Sleep_State==WAKE)&&(Systime>Input_time)){
                     printf("in state WAKING, next state NORMAL_WAKE\n");
                     state = NORMAL_WAKE;
                 } else if((Sleep_State==LIGHT||Sleep_State==DEEP)&&(Systime>=Input_time)){
