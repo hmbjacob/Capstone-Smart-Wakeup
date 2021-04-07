@@ -63,9 +63,11 @@ int main(){
             Light_Switch = ON;
         } else if(strcmp(inputString,"OFF\n")==0){
             Light_Switch = OFF;
+        } else{
+            Systime = atoi(inputString);
         }
 
-        Systime = atoi(inputString);
+        
         //printf("INPUT TIME: %d\n", Input_time);
 
         char *pointerToString = strtok(inputString, " "); //initial split the string
@@ -116,8 +118,8 @@ int main(){
                     state = SLEEP;
                 // if the User is in Light sleep and there are 30 mins before set time, or
                 // if the User is in DEEP sleep and there are 60 mins before set time, set the state to WAKE_INIT.
-                } else if(((Sleep_State==DEEP)&&(Systime>Input_time-60)) ||
-                          ((Sleep_State==LIGHT)&&(Systime>Input_time-30))){
+                } else if(((Sleep_State==DEEP)&&(Systime>=Input_time-60)) ||
+                          ((Sleep_State==LIGHT)&&(Systime>=Input_time-30))){
                     printf("in state SLEEP, next state WAKE_INIT\n");
                     state = WAKE_INIT;
                 // Otherwise, keep the state in SLEEP state.
@@ -238,10 +240,11 @@ int main(){
             }
             
             case FULL_BRIGHTNESS:{
+
                 if(Light_Switch == ON){
                     printf("in state FULL_BRIGHTNESS, next state MANUAL_LIGHT\n");
                     state = MANUAL_LIGHT;
-                } else if((Sleep_State==WAKE)&&(Systime>=Input_time)){
+                } else if((Sleep_State==WAKE)&&(Systime>=(Input_time-Full_Bright_Time))){
                     printf("in state FULL_BRIGHTNESS, next state NORMAL_WAKE\n");
                     state = NORMAL_WAKE;
                 } else if((Sleep_State==LIGHT||Sleep_State==DEEP)&&(Systime>=Input_time)){
