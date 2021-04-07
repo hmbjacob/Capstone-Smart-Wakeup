@@ -74,7 +74,7 @@ int main(){
 
         switch (state){
 
-            case IDLE:
+            case IDLE:{
 
                 // If the user is wake or ECG is off, stay in the IDLE state
                 if(Sleep_State==WAKE || ECG_Status == OFF){
@@ -94,9 +94,9 @@ int main(){
                     state = IDLE;
                 }
                 break;
+            }
 
-            case SLEEP:
-                // If the user wake up during the process, change state to IDLE.
+            case SLEEP:{
                 if(Sleep_State==WAKE){
                     printf("in state SLEEP, next state IDLE\n");
                     state = IDLE;
@@ -105,7 +105,7 @@ int main(){
                     printf("in state SLEEP, next state MANUAL_LIGHT\n");
                     state = MANUAL_LIGHT;
                 // if the User is still sleep, and the time is not yet one hour before the set time, stay in SLEEP state.
-                } else if((Sleep_State==LIGHT || Sleep_State==DEEP)&&(Systime < (Input_time-60)){
+                } else if((Sleep_State==LIGHT || Sleep_State==DEEP)&&(Systime < (Input_time-60))){
                     printf("in state SLEEP, next state SLEEP\n");
                     state = SLEEP;
                 // if the User is in Light sleep and there are 30 mins before set time, or
@@ -120,8 +120,9 @@ int main(){
                     state = SLEEP;
                 }
                 break;
+            }
         
-            case WAKE_INIT:
+            case WAKE_INIT:{
                 // Initialize variables 
                 Start_time = Systime;
                 Current_BPM = BPM;
@@ -136,14 +137,15 @@ int main(){
                     state = WAKE_BEGIN;
                 }
                 break;
+            }
             
-            case WAKE_BEGIN:
+            case WAKE_BEGIN:{
                 // If the user manually control the light, change to manual mode
                 if(Light_Switch==ON){
                     printf("in state WAKE_BEGIN, next state MANUAL_LIGHT\n");
                     state = MANUAL_LIGHT;
                 // increament the brightness of the light for 1/10 of total brightness
-                } else if(Systime >= (N*(Input_time-Start_time)/10+Start_time){
+                } else if(Systime >= (N*(Input_time-Start_time)/10+Start_time)){
                     printf("in state WAKE_BEGIN, next state WAKING\n");
                     state = WAKING;
                 // if the time is met the requried increament time, stay in this state.
@@ -152,8 +154,9 @@ int main(){
                     state = WAKE_BEGIN;
                 }
                 break;
+            }
         
-            case WAKING:
+            case WAKING:{
                 if((Systime<Input_time)&&(Sleep_State==DEEP||Sleep_State==LIGHT)){
                     state = WAKE_BEGIN;
                     printf("in state WAKING, next state WAKE_BEGIN\n");
@@ -171,32 +174,35 @@ int main(){
                     state = WAKING;
                 }
                 break;
+            }
         
-            case FORCE_WAKE:
+            case FORCE_WAKE:{
                 if(Light_Switch==ON){
                     printf("in state FORCE_WAKE, next state MANUAL_LIGHT\n");
                     state = MANUAL_LIGHT;
                 } else{
                     printf("in state FORCE_WAKE, next state IDLE\n");
-                    Alarm = TRUE;
-                    Sync_Data = TRUE;
+                    Alarm = true;
+                    Sync_Data = true;
                     state = IDLE;
                 }
                 break;
+            }
         
-            case NORMAL_WAKE:
+            case NORMAL_WAKE:{
                 if(Light_Switch==ON){
                     printf("in state NORMAL_WAKE, next state MANUAL_LIGHT\n");
                     state = MANUAL_LIGHT;
                 } else {
                     printf("in state NORMAL_WAKE, next state IDLE\n");
 
-                    Sync_Data = TRUE;
+                    Sync_Data = true;
                     state = IDLE;
                 }
                 break;
+            }
 
-            case MANUAL_LIGHT:
+            case MANUAL_LIGHT:{
                 if(Light_Switch == ON){
                     printf("in state MANUAL_LIGHT, next state MANUAL_LIGHT\n");
 
@@ -210,9 +216,8 @@ int main(){
 
                     state = IDLE;
                 }
-                break;
-        
-        
+                break;// If the user wake up during the process, change state to IDLE.
+            }
         
             default:
                 break;
