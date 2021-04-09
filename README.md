@@ -1,3 +1,3 @@
 # dreamteam9
 dream team 9
-all F's, noody passes
+all F's, nobody passes
