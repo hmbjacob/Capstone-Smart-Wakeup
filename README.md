@@ -1,3 +1,3 @@
 # dreamteam9
 dream team 9
-all F's, nobody passes
+all C's, everyone barely graduates
