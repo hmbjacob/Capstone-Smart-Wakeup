@@ -675,7 +675,7 @@ function toggle_save()
 		if(saving_ecg)
 			save_file_data(save_ecg_lines, "ecg_rec_" + tstamp + ".csv");
 		if(saving_data)
-			save_file_data(save_data_lines, "data_rec_" + tstamp + ".csv");
+			save_file_data(save_data_lines, "my_data_epic_" + tstamp + ".csv");
 		if(saving_rr)
 			save_file_data(save_rr_lines, "rr_rec_" + tstamp + ".csv");
 		document.getElementById("btn_save").value = "Start record";
@@ -739,13 +739,19 @@ function parse_history_data(buf, status)
 		if(saving_data && save_on)
 		{
 			var tim = new Date().getTime() - save_start_time;
-			for(var x = 0; x < uecg_hist.h_bpm.length; x++)
+			var i = 1;
+			for(var x = 1; x < uecg_hist.h_bpm.length; x++)
 			{
-				save_data_lines = save_data_lines + tim + ";" + uecg_hist.h_bpm[x] + ";" 
-									+ round3(uecg_hist.h_hrv[x]) + ";"  + round3(uecg_hist.h_gsr[x]) + ";" 
-									+ round3(uecg_hist.h_step_rate[x]) + ";"  + uecg_hist.h_temp[x] + ";" 
-									+ uecg_hist.h_batt[x] + ";"  + uecg_hist.h_acc_x[x] + ";" 
-									+ uecg_hist.h_acc_y[x] + ";"  + uecg_hist.h_acc_z[x] + "\n";
+				if (i*30000 >= tim)
+				{
+					
+				}
+				var acc_mag = (uecg_hist.h_acc_x[x]**2 + uecg_hist.h_acc_y[x]**2 + uecg_hist.h_acc_z[x]**2)**.5 - (uecg_hist.h_acc_x[x-1]**2 + uecg_hist.h_acc_y[x-1]**2 + uecg_hist.h_acc_z[x-1]**2)**.5; // Magnitude of the acceleration at time = x
+
+				// save additonal line of data corresponding to time = x with time/bpm/hrv/acc data. Saves with "other data" button
+				save_data_lines = save_data_lines + "Time: " + tim + ";" + uecg_hist.h_bpm[x] + ";" // Save
+									+ round3(uecg_hist.h_hrv[x]) + ";"  
+									+ acc_mag + "\n";
 			}
 		}
 
