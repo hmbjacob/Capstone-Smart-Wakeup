@@ -8,6 +8,7 @@ $Id: rfcomm-server.py 518 2007-08-10 07:20:07Z albert $
 import bluetooth
 import subprocess
 import sys
+import time
 try:
         subprocess.call(['sudo', 'hciconfig', 'hci0', 'piscan'])
 except:
@@ -38,16 +39,39 @@ try:
         data = client_sock.recv(1024)
         if not data:
             break
-        temp=(str(data).strip('b')).strip("'")
-        print("Received", temp)
-        temp+= ' Balsalm'
-        print("Sending", temp)
-        client_sock.send(str.encode(temp))
-except OSError:
-    pass
+        code=str(data)[2]
+        print(data)
+        if code=='1': # change settings
+            print('changed settings')
+            client_sock.send(str.encode('1'))
+        elif code=='2': # requested file
+            try:
+                with open("New","rb") as f: #add file called new to your directory to transfer it
+                    print('opened file')
+                    client_sock.send(str.encode(code))
+                    print('sent opcode for sending file')
+                    bytes=1
+                    while bytes:
+                        time.sleep(0.5)
+                        #prevent sending data too quickly. Android can't handle it for some reason
+                        #this just makes sure for every 1000 bytes sent, we get a response at least once
+                        data = client_sock.recv(1024)
+                        print('phone received data')
+                        bytes=f.read(1000)
+                        print(len(bytes))
+                        client_sock.send(bytes)
+                        print('sent')
+                    print('finished sending')
+                    client_sock.send(str.encode('\x04'))
+            except OSError as err:
+                    print("OS error: {0}".format(err))
+                    client_sock.send(str.encode('3')) 
+            #client_sock.send(str.encode(temp))
+except OSError as err:
+    print("OS error: {0}".format(err))
 
-print("Disconnected.")
+
 
 client_sock.close()
 server_sock.close()
-print("All done.")
+print("All closed.")
