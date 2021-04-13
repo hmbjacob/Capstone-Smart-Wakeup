@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+
+    <Button
+        android:id="@+id/btnFindUnpairedDevices"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="28dp"
+        android:layout_marginBottom="663dp"
+        android:onClick="btnDiscover"
+        android:text="Discover" />
+
+    <Button
+        android:id="@+id/btnStartConnection"
+        android:layout_width="132dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="278dp"
+        android:layout_marginTop="109dp"
+        android:layout_marginEnd="1dp"
+        android:layout_marginBottom="574dp"
+        android:text="Connect" />
+
+    <ListView
+        android:id="@+id/DeviceList"
+        android:textColor="#FFFFFFFF"
+        android:layout_width="225dp"
+        android:layout_height="308dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="19dp"
+        android:layout_marginTop="-4dp"
+        android:layout_marginEnd="167dp" />
+
+    <Button
+        android:id="@+id/btnChangeSettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/DeviceList"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="70dp"
+        android:layout_marginTop="85dp"
+        android:layout_marginBottom="229dp"
+        android:text="Change Settings" />
+
+    <Button
+        android:id="@+id/btnRequestFile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="51dp"
+        android:layout_marginBottom="226dp"
+        android:layout_toEndOf="@+id/btnChangeSettings"
+        android:text="Get File" />
+
+
+</RelativeLayout>

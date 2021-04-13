@@ -1,1 +1,4 @@
 This is a client and server bluetooth setup with the Pi as a server and Android phone as the client.
+
+BluetoothChat: communication/file transfer functionality built over AndroidDev official example app.
+UIBasic: App built from scratch. Can connect, have yet to migrate communication functionality over yet.
