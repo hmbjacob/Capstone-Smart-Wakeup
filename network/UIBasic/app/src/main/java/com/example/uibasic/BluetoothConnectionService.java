@@ -3,11 +3,16 @@ package com.example.uibasic;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -23,14 +28,17 @@ public class BluetoothConnectionService{
     private ConnectedThread mConnectedThread;
     private BluetoothDevice mmDevice;
     private UUID deviceUUID;
+    private Handler mHandler;
     ProgressDialog mProgressDialog;
     Context mContext;
+    //States. 0=idle,1=connected
+    int connected=0;
 
     public BluetoothConnectionService(Context context){
         mContext = context;
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        start();
     }
-
     //runs while attempting to make outgoing connection
     private class ConnectThread extends Thread{
         private BluetoothSocket mmSocket;
@@ -47,8 +55,9 @@ public class BluetoothConnectionService{
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            connected=1;
             mmSocket = tmp;
-            mBluetoothAdapter.cancelDiscovery();
+            //mBluetoothAdapter.cancelDiscovery();
             try {
                 mmSocket.connect();
                 Log.d(TAG,"connection worked");
@@ -60,7 +69,6 @@ public class BluetoothConnectionService{
                 }
                 e.printStackTrace();
             }
-
             //all worked
             connected(mmSocket,mmDevice);
         }
@@ -71,6 +79,7 @@ public class BluetoothConnectionService{
             } catch (IOException e) {
                 Log.e(TAG, "cancel: close() of mmSocket in Connectthread failed. " + e.getMessage());
             }
+            connected=0;
         }
 
     }
@@ -115,14 +124,91 @@ public class BluetoothConnectionService{
             mmOutStream = tmpOut;
         }
         public void run(){
+            Looper.prepare();
+            mHandler = new Handler(Looper.myLooper()) {
+                public void handleMessage(Message msg) {
+                    // process incoming messages here
+                    mProgressDialog.dismiss();
+                }
+            };
             byte[] buffer = new byte[1024];
             int bytes;
+            File outputDir = mContext.getCacheDir();
+            String dataFile = outputDir + "/" + File.separator + "test.txt";
             //keep listening until exception
             while(true){
                 try {
+                    //get msg from pi
                     bytes = mmInStream.read(buffer);
-                    String incomingMessage = new String(buffer,0,bytes);
                     Log.d(TAG,"inputstream received msg");
+                    int opcode = (int)buffer[0];
+                    switch(opcode){
+                        case 50: //received OK to start receiving file contents
+                            Log.d(TAG, "before");
+                            File output;
+
+                            output = new File(dataFile);
+                            OutputStream fo;
+                            try{
+                                fo = new FileOutputStream(output,false);
+                            } catch (FileNotFoundException e) {
+                                e.printStackTrace();
+                                break;
+                            }
+                            Log.d(TAG,"file created: "+output);
+
+                            Log.d(TAG, "tell pi you want the file");
+                            byte[] sendOP = "4".getBytes(); //opcode for telling pi you received data
+                            mmOutStream.write(sendOP);
+                            int broken=0;
+                            int r=0;
+                            /*
+                            This Loop continuously receives either opcodes or chunks of data.
+                            To control data flow, waits for opcode from sender
+                             */
+                            while(broken==0 && (r=mmInStream.read(buffer))>0){
+                                Log.d(TAG, "received data, code="+(int)buffer[0]);
+                                Log.d(TAG, "len= "+r);
+                                if(r == 1) { //received opcode
+                                    if((int) buffer[0] ==4){
+                                        Log.d(TAG, "breaking out");
+                                        broken = 1;
+                                        break;
+                                    }
+                                    else{
+                                        fo.write(buffer,0,1);
+                                        Log.d(TAG, "wrote to file");
+                                        mmOutStream.write(sendOP);
+                                    }
+                                }
+                                else{ //received file contents
+                                    fo.write(buffer,0,r);
+                                    Log.d(TAG, "wrote to file");
+                                    mmOutStream.write(sendOP);
+                                }
+
+                            }
+                            fo.close();
+                            /*
+                            try {
+                                BufferedReader br = new BufferedReader(new FileReader(dataFile));
+                                String line;
+                                while ((line = br.readLine()) != null) {
+                                    System.out.println(line);
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            */
+                            mProgressDialog.dismiss();
+                            //mHandler.sendEmptyMessage(0);
+                            Log.d(TAG, "finished getting file");
+                        case 51:
+                            break;
+                        case 49:
+                            Log.d(TAG, "got settings opcode back");
+                    }
+
                 } catch (IOException e) {
                     e.printStackTrace();
                     break;
@@ -155,7 +241,10 @@ public class BluetoothConnectionService{
     }
 
     //write method that accesses connection service
-    public void write(byte[] out){
+    public void write(byte[] out,int cas,ProgressDialog dg){
+        if (cas==1){
+            mProgressDialog=dg;
+        }
         ConnectedThread r;
         Log.d(TAG, "write: Write Called.");
         mConnectedThread.write(out);
