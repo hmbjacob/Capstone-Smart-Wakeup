@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">UIBasic</string>
+    <string name="connected_bool">Not connected</string>
+    <string name="success">We\'re Connected!</string>
 </resources>

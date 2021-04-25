@@ -1,0 +1,7 @@
+Squidward
+5
+60
+100
+54325
+True
+dataset.txt
