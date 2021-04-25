@@ -78,7 +78,7 @@ var acc_z_history = [];
 var acc_buff = [];
 var bpm_buff = [];
 var hrv_buff = [];
-var interval = 5000 // in ms
+var interval = 60000 // in ms
 var inc = 1;
 var data_acc = [];
 var data_hrv = [];
@@ -776,7 +776,7 @@ function parse_history_data(buf, status)
 				bpm_avg = round3(bpm_avg/i);
 				hrv_avg = round3(hrv_avg/i);
 				acc_avg = round3(acc_avg/i);
-				save_data_lines = save_data_lines + tim + ";" + bpm_avg + ";" + hrv_avg + ";" + acc_avg + "\n";
+			        save_data_lines = save_data_lines + (interval/1000*inc) + ";" + bpm_avg + ";" + hrv_avg + ";" + acc_avg + "\n";
 				console.log("interval passed\n");
 
 				bpm_buff = [];
