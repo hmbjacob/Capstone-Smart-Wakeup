@@ -771,7 +771,7 @@ function parse_history_data(buf, status)
 				for (i = 1; i < bpm_buff.length; i++) {
 					bpm_avg = bpm_avg + bpm_buff[i-1];
 					hrv_avg = hrv_avg + hrv_buff[i-1];
-					acc_avg = acc_avg + Math.pow(4, acc_buff[i]-acc_buff[i-1]);
+					acc_avg = acc_avg + Math.log(Math.abs(acc_buff[i] - acc_buff[i - 1]) + 1);
 				}
 				bpm_avg = round3(bpm_avg/i);
 				hrv_avg = round3(hrv_avg/i);
