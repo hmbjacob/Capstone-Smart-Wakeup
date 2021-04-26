@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <wiringPi.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <termios.h>
+
+#include <errno.h>
 
 
 #define IDLE 0
@@ -19,6 +25,9 @@
 #define WAKE 0
 #define LIGHT 1
 #define DEEP 2
+
+#define PWM_PIN 1
+
 int main(){
 
     int Sleep_State  = 0; // Sleep_State == 0: Not Sleep State 
@@ -26,6 +35,11 @@ int main(){
                           // Sleep_State == 2: Deep Sleep State 
     int ECG_Status = 1;   // Assume the ECG is on for testing, change this when deal with 
     int state = 0;
+    
+    int intensity = 0;
+    wiringPiSetup () ;
+    pinMode(PWM_PIN, PWM_OUTPUT);
+    pwmWrite(PWM_PIN, 0);
 
     while (1) {
         char inputString[62] = "";
@@ -258,6 +272,25 @@ int main(){
             default:
                 break;
         }
+        
+        
+        if((state == WAKING)&&(intensity<510)){
+            intensity += 51;
+        }
+        else if((state == WAKE_BEGIN)&&(intensity<510)){
+            intensity += 0;
+        }
+        else if(((state == MANUAL_LIGHT)||(state==FULL_BRIGHTNESS))&&(intensity<510)){
+            intensity = 509;
+        }
+        else{
+            intensity = 0;
+        }
+        
+        
+            
+            
+        pwmWrite(PWM_PIN, intensity);
 
 
     }
