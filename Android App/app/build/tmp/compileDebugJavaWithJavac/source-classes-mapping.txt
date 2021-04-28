@@ -1,0 +1,8 @@
+com/example/myproject/GraphPage.java
+ com.example.myproject.GraphPage
+com/example/myproject/BuildConfig.java
+ com.example.myproject.BuildConfig
+com/example/myproject/MainActivity.java
+ com.example.myproject.MainActivity
+ com.example.myproject.MainActivity$1
+ com.example.myproject.MainActivity$2
