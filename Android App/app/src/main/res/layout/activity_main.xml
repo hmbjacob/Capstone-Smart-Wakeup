@@ -56,4 +56,13 @@
         android:text="@string/time_selected"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
+    <Button
+        android:id="@+id/Graph_Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Detail Graph"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp"  />
+
 </RelativeLayout>
