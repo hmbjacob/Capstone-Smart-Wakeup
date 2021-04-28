@@ -1,14 +1,26 @@
 import time
 import datetime
 import socket
+import asyncio
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn import datasets
+from sklearn import metrics
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.datasets import load_svmlight_file
+from sklearn.datasets import load_iris
+from sklearn.model_selection import validation_curve
+from sklearn.linear_model import Ridge
+from sklearn.svm import SVC
 
 class Sleeper:
     def __init__(self, duration, config_file):
         self.duration = int(duration)
         self.time_start = datetime.datetime.now()
         self.config_file = config_file
+
+        self.dyn_x = []
+        self.dyn_y = []
 
         f = open(config_file, "r")
         self.name = f.readline()
@@ -23,6 +35,10 @@ class Sleeper:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect(('localhost', self.port))
 
+        self.clf = svm.SVC(gamma = 0.001, C = 100.0)
+        self.train_data = load_svmlight_file(self.data_file)                    # caveat: data must be of form line by line < [identifier] [feature-id]:[value] ... >
+        self.clf.fit(self.train_data.data[:-1], self.train_data.target[:-1])    # fit the datafile to a dataset which can now facilitate predictions
+        
         # plt.xlabel("HRV")
         # plt.ylabel("Time (s)")
         # plt.show()
@@ -62,8 +78,18 @@ class Sleeper:
                 return None
             n_sent = n_sent + status
 
-    def accept(self, point):                    # add a new HR point to the active / running dataset
-        return
+    def update(self, data_file, regex):
+        with open(data_file) as reader:
+            new_data = reader.readlines()
+            for line in new_data:
+                split_tupple = line.split(regex)
+                self.dyn_x.append(split_tupple[0])
+                self.dyn_y.append(str(datetime.datetime.now()))
+        self.ax3 = plt.subplots()
+        self.ax3.plot(self.dyn_x, self.dyn_y, color = 'green', linestype = 'dashdot', linewidth = 1)
+        self.ax3.set_ylabel('Live HRV')
+        self.ax3.set_xticks([])                 # adjust later after tests
+        plt.show()
     
     def simple(self):                           # simple wakeup with no real-time predictive analysis
         print("Sleep ", str(60*(self.duration - self.wakeup_span)))
@@ -100,8 +126,9 @@ class Sleeper:
         plt.show()
         
     def manage(self):                           # manage control signals from the ECG feeding to the State Machine while asleep
-        while(True):
-            print("Hi")
+        uncertainty = 0.25                      # max relative difference between ss
+        scale
+        
 if __name__ == '__main__':
     S1 = Sleeper(100, "sleep_config.txt")
     S1.graph_baseline()
