@@ -13,8 +13,11 @@ from sklearn.model_selection import validation_curve
 from sklearn.linear_model import Ridge
 from sklearn.svm import SVC
 
+plt.ion()
+
 class Sleeper:
     def __init__(self, duration, config_file):
+        #TODO: add timescale functionality
         self.duration = int(duration)
         self.time_start = datetime.datetime.now()
         self.config_file = config_file
@@ -35,9 +38,9 @@ class Sleeper:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect(('localhost', self.port))
 
-        self.clf = svm.SVC(gamma = 0.001, C = 100.0)
-        self.train_data = load_svmlight_file(self.data_file)                    # caveat: data must be of form line by line < [identifier] [feature-id]:[value] ... >
-        self.clf.fit(self.train_data.data[:-1], self.train_data.target[:-1])    # fit the datafile to a dataset which can now facilitate predictions
+        #self.clf = svm.SVC(gamma = 0.001, C = 100.0)
+        #self.train_data = load_svmlight_file(self.data_file)                    # caveat: data must be of form line by line < [identifier] [feature-id]:[value] ... >
+        #self.clf.fit(self.train_data.data[:-1], self.train_data.target[:-1])    # fit the datafile to a dataset which can now facilitate predictions
         
         # plt.xlabel("HRV")
         # plt.ylabel("Time (s)")
@@ -124,6 +127,36 @@ class Sleeper:
         # plt.figure(figsize = (13.3, 10))
         plt.rcParams['figure.figsize'] = [13.3, 10]
         plt.show()
+
+    def sim(self, speedup, run_file):
+        # Data points will be read at a rate of 1 * speedup per second
+
+        sim_x = []
+        sim_y = []
+
+        g1, ax3 = plt.subplots()
+        linez, = ax3.plot([],[], 'o')
+        ax3.set_autoscaley_on(True)
+        ax3.grid()
+        
+        with open(run_file) as reader:
+            data = reader.readlines()
+            elapsed = 0
+            for line in data:
+                time.sleep(1/speedup)
+                elapsed = elapsed + 1
+                split_tupple = line.split(',')
+                #sim_x.append(split_tupple[0])
+                #sim_y.append(split_tupple[1])
+                split_tupple[1] = split_tupple[1][:-1]
+                linez.set_xdata(np.append(linez.get_xdata(), elapsed))
+                linez.set_ydata(np.append(linez.get_ydata(), int(split_tupple[1])))
+                ax3.relim()
+                ax3.autoscale_view()
+                g1.canvas.draw()
+                g1.canvas.flush_events()
+            #plt.show()
+                
         
     def manage(self):                           # manage control signals from the ECG feeding to the State Machine while asleep
         uncertainty = 0.25                      # max relative difference between ss
@@ -131,6 +164,7 @@ class Sleeper:
         
 if __name__ == '__main__':
     S1 = Sleeper(100, "sleep_config.txt")
-    S1.graph_baseline()
-    S1.simple()
+    #S1.graph_baseline()
+    #S1.simple()
     # S1.manage()
+    S1.sim(1000, "datasets/dataset_fake_1.txt")
