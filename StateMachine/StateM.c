@@ -51,7 +51,7 @@ int main(){
         //       BPM comes from the ECG.
         //==================
 
-        int Systime = __TIME__;
+        int Systime = Parse_sys_time(__TIME__);
         int Input_time;
         int BPM;
         int Light_Switch;
@@ -75,8 +75,8 @@ int main(){
             Sleep_State = LIGHT;
         } else if(strcmp(inputString,"DEEP\n")==0){
             Sleep_State = DEEP;
-        } else if(strcmp(inputString,"WAKE\n")==0){
-            Sleep_State = WAKE;
+        } else if(strcmp(inputString,"DONE\n")==0){
+            Sleep_State = DONE;
         } else if(strcmp(inputString,"ON\n")==0){
             Light_Switch = ON;
         } else if(strcmp(inputString,"OFF\n")==0){

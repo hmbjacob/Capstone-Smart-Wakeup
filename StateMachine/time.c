@@ -39,11 +39,6 @@ void Parse_Parameters(int time, int alarm, int manual){
 	
 	Token = strtok(buff, ":");
 	// Seperate by space: to form one HH:MM;1/0;1/0
-
-
-	
-		
-
 	hr = atoi(Token);
 		
 	Token = strtok(NULL, ";");
@@ -58,9 +53,34 @@ void Parse_Parameters(int time, int alarm, int manual){
 	manual = atoi(Token);
 	printf("\nmanual:%d\n",manual);
 
-
-
-
 	fclose(fp);
+	
+}
+
+
+//Parse system time
+int Parse_sys_time(char *time){
+	int totMin = 0;
+	int min = 0;
+	int hr = 0;
+	int sec = 0;
+	
+	char* Token;
+	char sys_time[1024];
+	strcpy(sys_time,__TIME__);
+	
+	Token = strtok(sys_time, ":");
+	hr = atoi(Token);
+
+	Token = strtok(NULL, ":");
+	min = atoi(Token);
+	Token = strtok(NULL, ":");
+	sec = atoi(Token);
+	Token = strtok(NULL, ":");
+	
+	totMin = time_transfer(hr, min);
+	return totMin;
+	
+	
 	
 }

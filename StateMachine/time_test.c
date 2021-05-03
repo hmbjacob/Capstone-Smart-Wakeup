@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-//#include <wiringPi.h>
+#include <wiringPi.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
@@ -12,9 +12,8 @@
 
 int main(){
 	int time, alarm, manual;
-
-	printf("\n\ntest calculate function\n");
-	printf("result:%d\n",time_transfer(10,10));
-	printf("end test\n\n");
-	Parse_Parameters(time, alarm, manual);
+	
+	printf("%s\n", __TIME__);
+	Parse_Parameters( time, alarm, manual);
+	printf("Total_time: %d\n",Parse_sys_time(__TIME__));
 }
