@@ -3,6 +3,7 @@ Squidward
 60
 100
 54325
+logfile.txt
 True
 datasets/dataset_fake_1.txt
 1;2;3

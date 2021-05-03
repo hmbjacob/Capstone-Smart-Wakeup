@@ -31,6 +31,7 @@ class Sleeper:
         self.predictive_max = f.readline()      # earliest wakeup where a state transition will be permitted
         self.num_divisions = int(f.readline())  # how many steps to break wakeup into, bounded [1, 100] on Windows and [1, 1000] on Unix due to clock limits (for now)
         self.port = int(f.readline())           # port for local communication to send control signals
+        self.log_file = f.readline()
         self.use_data = f.readline()            # whether or not to use predictive wakeup feature
         self.data_file = f.readline()           # (optional) dataset for predictive optimal wakeup
         self.sets = f.readline().split(';')     # (optional) additional datasets for prediction
@@ -53,26 +54,27 @@ class Sleeper:
         self.y = []
         self.x_acc = []
         self.y_acc = []
-
         n_counted = []
-        for i in range(10000):
+        
+        for i in range(2000):
             n_counted.append(int(0))
+            #self.x.append(float(0))
+            #self.y.append(float(0))
+            #self.x_acc.append(float(0))
+            #self.y_acc.append(float(0))
         
         for num in self.sets:
+            print(num)
             # self.x = []
             # self.y = []
             fd = open(str("datasets/hrv_fake_" + num + ".txt"), "r")
             dataset =  fd.readlines()
             fd.close()
-            lc = int(0)
+            lc = 0
             for line in dataset[:-1]:
                 split_tupple = line.split(';')
-                #self.x.append(split_tupple[0])
-                #self.y.append(float(split_tupple[1]))
-            #    split_tupple = line.split(';')
-                if len(self.x) > lc:
+                if len(self.x) > lc:            # average the datasets
                     n_counted[lc] = n_counted[lc] + 1
-            #        #self.x[lc] = (self.x[lc]*(n_counted[lc]-1) + split_tupple[0]) / n_counted[lc]
                     self.y[lc] = (float(self.y[lc]*(n_counted[lc]-1)) + float(split_tupple[1])) / n_counted[lc]
                     #("acc: "+str(self.y[lc]))
                 else:
@@ -93,7 +95,7 @@ class Sleeper:
             fd.close()
             lc = int(0)
             for line in dataset[:-1]:
-                print(line)
+                #print(line)
                 split_tupple = line.split(';')
                 split_tupple[1] = split_tupple[1].split('\n')[0]
                 if len(self.x_acc) > lc:
@@ -105,17 +107,26 @@ class Sleeper:
                     self.x_acc.append(split_tupple[0])
                     self.y_acc.append(float(split_tupple[1]))
                 lc = lc + 1
+                #print(str(lc) + " " + str(self.y_acc[lc]))
+        print('-_-')
         print(str(len(self.x_acc)))
         print(str(len(self.y_acc)))
         print(str(len(self.x)))
-        self.ax.plot(self.x_acc, self.y_acc, color = 'blue', linestyle = 'solid', linewidth = 1)         
+        self.ax.set_autoscaley_on(True)
+        self.ax.plot(self.x_acc, self.y_acc, color = 'blue', linestyle = 'solid', linewidth = 1)
+        self.ax.tick_params(axis = 'y', labelcolor = 'blue')
+
+        #self.ax3 = self.ax.twinx()
+        #self.ax3.set_autoscaley_on(True)
         self.ax.plot(self.x, self.y, color = 'green', linestyle = 'solid', linewidth = 1)
+        self.ax.tick_params(axis = 'y', labelcolor = 'green')
+        self.ax.autoscale_view()
         self.ax.set_yticks(self.ax.get_yticks()[::10])
-        self.ax.set_xticks(self.ax.get_xticks()[::35])
+        self.ax.set_xticks(self.ax.get_xticks()[::100])
             
         plt.gcf().autofmt_xdate()
         plt.xlabel('Time')
-        plt.ylabel('HRV')
+        plt.ylabel('HRV(B) & ACC(G)')
         plt.title('Dynamic HRV Graph (Debug)')
             # plt.ion()
         plt.show()
@@ -169,10 +180,10 @@ class Sleeper:
                 print('set val')
                 y2.append(it / self.num_divisions)
                 it = it + 1
-        self.ax2 = self.ax.twinx()
-        self.ax2.plot(self.x, y2, color = 'red', linestyle = 'dashed', linewidth = 1)
-        self.ax2.set_ylabel('Light Intensity')
-        self.ax2.set_xticks([])
+        self.ax4 = self.ax.twinx()
+        self.ax4.plot(self.x, y2, color = 'red', linestyle = 'dashed', linewidth = 1)
+        self.ax4.set_ylabel('Light Intensity')
+        self.ax4.set_xticks([])
         # self.ax2.ylim(0, 1)
         # plt.figure(figsize = (13.3, 10))
         plt.rcParams['figure.figsize'] = [13.3, 10]
@@ -180,8 +191,10 @@ class Sleeper:
 
     def sim(self, speedup, run_file):
         # Data points will be read at a rate of 1 * speedup per second
-
+        #plt.ion()
         self.ax_int = self.ax2.twinx()
+
+        print("In sim")
 
         sim_x = []
         sim_y = []
@@ -217,7 +230,7 @@ class Sleeper:
                     line_intensity.set_ydata(np.append(line_intensity.get_ydata(), (intensity / (len(data) - wk_start - 1))))
                     print(intensity / (len(data) - wk_start))
                     intensity = intensity + 1
-                    self.send_com(str("WAKE " + str(100 * val)).encode())
+                    self.send_com(str("DEEP " + str(100 * val)).encode())
                 else:
                     line_intensity.set_ydata(np.append(line_intensity.get_ydata(), 0))
                     
@@ -227,22 +240,30 @@ class Sleeper:
                 self.ax2.autoscale_view()
                 self.fig.canvas.draw()
                 self.fig.canvas.flush_events()
-                if elapsed % 20 == 0:
-                    self.send_com(str("DEEP").encode())
+                if elapsed % 20 == 0 and elapsed < wk_start:
+                    self.send_com(str("DEEP 0.0").encode())
+
+                #print("Sim")
             #plt.show()
                 
         
     def manage(self):                           # manage control signals from the ECG feeding to the State Machine while asleep
         uncertainty = 0.25                      # max relative difference between ss
-        scale
+    #    scale
         
 if __name__ == '__main__':
-    print("Run Simulation? (y/n)")
-    do_sim = str(input())
     S1 = Sleeper(100, "sleep_config.txt")
-    #if do_sim != 'y' and do_sim != 'Y':
-    S1.graph_baseline()
-    # S1.simple()
-    # S1.manage()
-    if do_sim == 'y' or do_sim == 'Y':
-        S1.sim(10000, "datasets/acc_fake_1.txt")
+    while True:
+        print("Run Simulation? (y/n)")
+        do_sim = str(input())
+        S1.send_com("DONE 0".encode())
+        time.sleep(0.25)
+        #if do_sim != 'y' and do_sim != 'Y':
+        S1.graph_baseline()
+        # S1.simple()
+        # S1.manage()
+        if do_sim == 'y' or do_sim == 'Y':
+            S1.sim(10000, "datasets/acc_fake_1.txt")
+            S1.send_com("WAKE 100.0".encode())
+            time.sleep(0.25)
+            S1.send_com("DONE 100.0".encode())
