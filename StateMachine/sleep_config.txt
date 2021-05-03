@@ -5,3 +5,4 @@ Squidward
 54325
 True
 datasets/dataset_fake_1.txt
+1;2;3

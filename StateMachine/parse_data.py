@@ -33,6 +33,7 @@ class Sleeper:
         self.port = int(f.readline())           # port for local communication to send control signals
         self.use_data = f.readline()            # whether or not to use predictive wakeup feature
         self.data_file = f.readline()           # (optional) dataset for predictive optimal wakeup
+        self.sets = f.readline().split(';')     # (optional) additional datasets for prediction
         f.close()
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -46,28 +47,77 @@ class Sleeper:
         # plt.ylabel("Time (s)")
         # plt.show()
 
-    def graph_baseline(self):
+    def graph_baseline(self):                   # graph historical dataset files using format
+        self.fig, (self.ax, self.ax2) = plt.subplots(2)
         self.x = []
-        y = []
+        self.y = []
+        self.x_acc = []
+        self.y_acc = []
+
+        n_counted = []
+        for i in range(10000):
+            n_counted.append(int(0))
         
-        fd = open(self.data_file, "r")
-        dataset =  fd.readlines()
-        fd.close()
-        for line in dataset:
-            split_tupple = line.split(',')
-            self.x.append(split_tupple[0])
-            y.append(float(split_tupple[1]))
-            
-        # plt.plot(x, y, color = 'blue', linestyle = 'solid', linewidth = 2)
-                # marker = 'o', markerfacecolor = 'blue', markersize = 5)
-        self.fig, self.ax = plt.subplots()
-        self.ax.plot(self.x, y, color = 'blue', linestyle = 'solid', linewidth = 1)
+        for num in self.sets:
+            # self.x = []
+            # self.y = []
+            fd = open(str("datasets/hrv_fake_" + num + ".txt"), "r")
+            dataset =  fd.readlines()
+            fd.close()
+            lc = int(0)
+            for line in dataset[:-1]:
+                split_tupple = line.split(';')
+                #self.x.append(split_tupple[0])
+                #self.y.append(float(split_tupple[1]))
+            #    split_tupple = line.split(';')
+                if len(self.x) > lc:
+                    n_counted[lc] = n_counted[lc] + 1
+            #        #self.x[lc] = (self.x[lc]*(n_counted[lc]-1) + split_tupple[0]) / n_counted[lc]
+                    self.y[lc] = (float(self.y[lc]*(n_counted[lc]-1)) + float(split_tupple[1])) / n_counted[lc]
+                    #("acc: "+str(self.y[lc]))
+                else:
+                    n_counted[lc] = 1
+                    self.x.append(split_tupple[0])
+                    self.y.append(split_tupple[1])
+            #        print("append")
+                lc = lc + 1
+                
+            # plt.plot(x, y, color = 'blue', linestyle = 'solid', linewidth = 2)
+                    # marker = 'o', markerfacecolor = 'blue', markersize = 5)
+            #self.ax.plot(self.x, self.y, color = 'blue', linestyle = 'solid', linewidth = 1)
+
+            # self.x = []
+            # self.y = []
+            fd = open(str("datasets/acc_fake_"+ num + ".txt"), "r")
+            dataset = fd.readlines()
+            fd.close()
+            lc = int(0)
+            for line in dataset[:-1]:
+                print(line)
+                split_tupple = line.split(';')
+                split_tupple[1] = split_tupple[1].split('\n')[0]
+                if len(self.x_acc) > lc:
+                    n_counted[lc] = n_counted[lc] + 1
+                    # self.x_acc[lc] = (self.x_acc[lc]*(n_counted[lc]-1) + split_tupple[0]) / n_counted[lc]
+                    self.y_acc[lc] = (self.y_acc[lc]*int(n_counted[lc]-1) + float(split_tupple[1])) / n_counted[lc]
+                else:
+                    n_counted[lc] = 1
+                    self.x_acc.append(split_tupple[0])
+                    self.y_acc.append(float(split_tupple[1]))
+                lc = lc + 1
+        print(str(len(self.x_acc)))
+        print(str(len(self.y_acc)))
+        print(str(len(self.x)))
+        self.ax.plot(self.x_acc, self.y_acc, color = 'blue', linestyle = 'solid', linewidth = 1)         
+        self.ax.plot(self.x, self.y, color = 'green', linestyle = 'solid', linewidth = 1)
+        self.ax.set_yticks(self.ax.get_yticks()[::10])
         self.ax.set_xticks(self.ax.get_xticks()[::35])
+            
         plt.gcf().autofmt_xdate()
         plt.xlabel('Time')
         plt.ylabel('HRV')
         plt.title('Dynamic HRV Graph (Debug)')
-        plt.ion()
+            # plt.ion()
         plt.show()
 
     def send_com(self, msg):
@@ -131,30 +181,54 @@ class Sleeper:
     def sim(self, speedup, run_file):
         # Data points will be read at a rate of 1 * speedup per second
 
+        self.ax_int = self.ax2.twinx()
+
         sim_x = []
         sim_y = []
 
-        g1, ax3 = plt.subplots()
-        linez, = ax3.plot([],[], 'o')
-        ax3.set_autoscaley_on(True)
-        ax3.grid()
+        # g1, ax3 = plt.subplots()
+        linez, = self.ax2.plot([],[], color = 'blue', linewidth = 1)
+        line_intensity, = self.ax_int.plot([],[], color = 'red', linestyle = 'dashed', linewidth = 1)
+        self.ax_int.set_ylim([-0.025, 1])
+        self.ax2.set_autoscaley_on(True)
+        # self.ax_int.set_autoscaley_on(True)
+        # self.ax_int.grid()
+        self.ax2.grid()
         
         with open(run_file) as reader:
             data = reader.readlines()
+            wk_start = len(data) - int(float(float(self.wakeup_span) / float(self.duration)) * len(data))
+            print(wk_start)
+            print(len(data))
+            
             elapsed = 0
-            for line in data:
+            intensity = 0
+            for line in data[:-1]:
                 time.sleep(1/speedup)
                 elapsed = elapsed + 1
-                split_tupple = line.split(',')
-                #sim_x.append(split_tupple[0])
-                #sim_y.append(split_tupple[1])
+                split_tupple = line.split(';')
                 split_tupple[1] = split_tupple[1][:-1]
-                linez.set_xdata(np.append(linez.get_xdata(), elapsed))
-                linez.set_ydata(np.append(linez.get_ydata(), int(split_tupple[1])))
-                ax3.relim()
-                ax3.autoscale_view()
-                g1.canvas.draw()
-                g1.canvas.flush_events()
+                linez.set_xdata(np.append(linez.get_xdata(), float(elapsed)))
+                linez.set_ydata(np.append(linez.get_ydata(), float(split_tupple[1])))
+
+                line_intensity.set_xdata(np.append(line_intensity.get_xdata(), elapsed))
+                if elapsed >= wk_start:
+                    val = intensity / (len(data) - wk_start - 1)
+                    line_intensity.set_ydata(np.append(line_intensity.get_ydata(), (intensity / (len(data) - wk_start - 1))))
+                    print(intensity / (len(data) - wk_start))
+                    intensity = intensity + 1
+                    self.send_com(str("WAKE " + str(100 * val)).encode())
+                else:
+                    line_intensity.set_ydata(np.append(line_intensity.get_ydata(), 0))
+                    
+                self.ax_int.relim()
+                self.ax_int.autoscale_view()
+                self.ax2.relim()
+                self.ax2.autoscale_view()
+                self.fig.canvas.draw()
+                self.fig.canvas.flush_events()
+                if elapsed % 20 == 0:
+                    self.send_com(str("DEEP").encode())
             #plt.show()
                 
         
@@ -163,8 +237,12 @@ class Sleeper:
         scale
         
 if __name__ == '__main__':
+    print("Run Simulation? (y/n)")
+    do_sim = str(input())
     S1 = Sleeper(100, "sleep_config.txt")
-    #S1.graph_baseline()
-    #S1.simple()
+    #if do_sim != 'y' and do_sim != 'Y':
+    S1.graph_baseline()
+    # S1.simple()
     # S1.manage()
-    S1.sim(1000, "datasets/dataset_fake_1.txt")
+    if do_sim == 'y' or do_sim == 'Y':
+        S1.sim(10000, "datasets/acc_fake_1.txt")
