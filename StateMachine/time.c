@@ -19,7 +19,7 @@ int time_transfer(int hour, int min){
 
 // This function parse input from a config file to the int hour and mins
 
-void Parse_Parameters(int time, int alarm, int manual){
+int Parse_Parameters(int time, int alarm, int manual){
 	FILE* fp;
 	char buff[1024];
 	fp = fopen("config.txt","r");
@@ -31,7 +31,7 @@ void Parse_Parameters(int time, int alarm, int manual){
 	int subindex = 0;
 	int hr;
 	int min;
-
+	int total_time;
 	if(fp==NULL){
 		printf("\nError: Can't find file\n");
 		exit(0);
@@ -44,17 +44,19 @@ void Parse_Parameters(int time, int alarm, int manual){
 	Token = strtok(NULL, ";");
 	min = atoi(Token);
 		
-	time = time_transfer(hr,min);
-	printf("\ntime:%d\n",time);
+	
+	
 	Token = strtok(NULL, ";");
 	alarm = atoi(Token);
 	printf("\nalarm:%d\n",alarm);
 	Token = strtok(NULL, ";");
 	manual = atoi(Token);
 	printf("\nmanual:%d\n",manual);
-
-	fclose(fp);
+	 
+	printf("\ntime:%d\n",time);
 	
+	fclose(fp);
+	return time_transfer(hr,min);
 }
 
 
