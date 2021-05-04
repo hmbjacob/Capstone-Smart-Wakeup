@@ -42,18 +42,10 @@ int Parse_InputTime(){
 	hr = atoi(Token);
 		
 	Token = strtok(NULL, ";");
-	min = atoi(Token);
-		
-	
+	min = atoi(Token);	
 	
 	Token = strtok(NULL, ";");
-	//alarm = atoi(Token);
-	//printf("\nalarm:%d\n",alarm);
 	Token = strtok(NULL, ";");
-	//manual = atoi(Token);
-	//printf("\nmanual:%d\n",manual);
-	 
-	//printf("\ntime:%d\n",time);
 	
 	fclose(fp);
 	return time_transfer(hr,min);
@@ -181,7 +173,6 @@ int Parse_State(char *time){
 	if(strcmp(Token,"DEEP")==0){
 		
 		return DEEP;
-		printf("STATE:%s\n",Token);
 	} else if(strcmp(Token,"LIGHT")==0){
 		
 		return LIGHT;
@@ -211,17 +202,18 @@ int Parse_Brightness(char *time){
 	
 
 	Token = strtok(NULL, " ");
-	printf("Token:%s\n",Token);
 	return (int) atof(Token);
-	
 	Token = strtok(NULL, " ");
 	
 	
 
 }
 
-void parse_time_print(int time){
+char* parse_time_print(int time){
 	int hr = time/60;
 	int min = time - hr*60;
-	printf("(hr%d:min%d)",hr,min);
+	static char str[40];
+	sprintf(str,"%d:%d",hr,min);
+	return str;
+	
 }

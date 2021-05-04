@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-//#include <wiringPi.h>
+#include <wiringPi.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
@@ -27,6 +27,7 @@ int main(){
     int Light_Switch;
     int brightness = 0;
     int Full_Bright_Time = 10;
+    int Systime = 115;
 
     wiringPiSetup () ;
     pinMode(PWM_PIN, PWM_OUTPUT);
@@ -39,6 +40,11 @@ int main(){
     ssize_t read;
     fp = fopen("state_data.txt","r");
     line = (char *) malloc (bufsize + 1);
+    
+    FILE *fw;
+    fw = fopen( "state_output.txt" , "w" );
+    fclose(fw);
+    char feedback_str[80];
 
     if(fp==NULL){
         printf("\nError: Can't find file\n");
@@ -47,6 +53,7 @@ int main(){
 
     while (1) {
         char inputString[62] = "";
+        fw = fopen( "state_output.txt" , "a" );
         //==================
         // NOTE: These two variables need to be modified in the future
         //       The first test set these variables from terminal input 
@@ -54,7 +61,15 @@ int main(){
         //       BPM comes from the ECG.
         //==================
 
-        int Systime = Parse_sys_time(__TIME__);
+        delay(500);
+        
+        if(Systime >= 1440)
+            Systime = 120;
+        else
+            Systime += 5;
+            
+        //int Systime = Parse_sys_time(__TIME__);
+        
         
 
         bool Alarm = false;
@@ -67,8 +82,15 @@ int main(){
         int Current_BPM;
         int N;
         int alarm_option = 0;
-        Parse_Parameters(Input_time, alarm_option, Light_Switch);
-
+        Input_time = Parse_InputTime();
+        alarm_option = Parse_Alarm();
+        Light_Switch = Parse_Manual();
+        char input_time[80];
+        strcpy(input_time, parse_time_print(Input_time));
+        char sys_time[40];
+        strcpy(sys_time, parse_time_print(Systime));
+        printf("INPUT time: %s, System time: %s\n", input_time, sys_time);
+        //printf("INPUT time: %d, system_time: %d\n", Input_time, Systime);
         // get data from the sleeping algorithm
         if((read=getline(&line,&bufsize,fp))!=-1){
             Sleep_State = Parse_State(line);
@@ -78,34 +100,6 @@ int main(){
             // ================================
         }
 
-
-
-
-
-        fgets(inputString, 62, stdin); //get the input & save
-        //printf("%s", inputString);
-        if(strcmp(inputString,"LIGHT\n")==0){
-            Sleep_State = LIGHT;
-        } else if(strcmp(inputString,"DEEP\n")==0){
-            Sleep_State = DEEP;
-        } else if(strcmp(inputString,"DONE\n")==0){
-            Sleep_State = DONE;
-        } else if(strcmp(inputString,"ON\n")==0){
-            Light_Switch = ON;
-        } else if(strcmp(inputString,"OFF\n")==0){
-            Light_Switch = OFF;
-        } else{
-            Systime = atoi(inputString);
-        }
-
-        
-        //printf("INPUT TIME: %d\n", Input_time);
-
-        char *pointerToString = strtok(inputString, " "); //initial split the string
-
-        while (pointerToString != NULL) { //split till the end by while-loop
-            pointerToString = strtok(NULL, " ");
-        }
 
 
         switch (state){
@@ -245,18 +239,52 @@ int main(){
                 break;
         }
         
-        
-        intensity = brightness*5;
+        if(state == IDLE)
+            intensity = 0;
+        else if(state == MANUAL_LIGHT)
+            intensity = 500;
+        else
+            intensity = brightness*5;
         
         
             
             
         pwmWrite(PWM_PIN, intensity);
+        
+        char feedback_light[19];
+        
+        //NOT SLEEP
+        if(Sleep_State == 0 && Sleep_State != DONE){
+            char feedback_wake[18];
+            sprintf(feedback_wake,"WAKE;%s\n\0",sys_time);
+                fputs(feedback_wake, fw);
+        }
+        //LIGHT
+        else if(Sleep_State == 1 && Sleep_State != DONE){
+            
+            sprintf(feedback_light,"LIGHT;%s\n\0",sys_time);
+            //for(int i=0; i<sizeof(feedback_light); i++){
+                fputs(feedback_light, fw);
+            //}
+        }
+        //DEEP
+        else if (Sleep_State == 2 && Sleep_State != DONE){
+            char feedback_deep[18];
+            sprintf(feedback_deep,"DEEP;%s\n\0",sys_time);
+            //for(int i=0; i<sizeof(feedback_deep); i++){
+                fputs(feedback_deep, fw);
+            //}
+        }
+       fclose(fw);
+        //printf("%s\n",feedback_light);
+        
 
 
     }
 
     free(line);
     fclose(fp);
+    fclose(fw);
+    
     return 1;
 }
