@@ -1,13 +1,10 @@
 package com.example.uibasic;
 
-import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
+import android.content.Intent;
 import android.util.Log;
 
 import java.io.File;
@@ -28,17 +25,31 @@ public class BluetoothConnectionService{
     private ConnectedThread mConnectedThread;
     private BluetoothDevice mmDevice;
     private UUID deviceUUID;
-    private Handler mHandler;
-    ProgressDialog mProgressDialog;
     Context mContext;
     //States. 0=idle,1=connected
     int connected=0;
 
-    public BluetoothConnectionService(Context context){
-        mContext = context;
+    private static class InstanceHolder {
+        private static final BluetoothConnectionService INSTANCE = new BluetoothConnectionService();
+    }
+
+    public static BluetoothConnectionService getInstance() {
+        return InstanceHolder.INSTANCE;
+    }
+
+    private BluetoothConnectionService() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         start();
     }
+    public void setContext(Context context) {
+        mContext = context;
+    }
+
+    //public BluetoothConnectionService(Context context){
+    //    mContext = context;
+     //   mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    //    start();
+    //}
     //runs while attempting to make outgoing connection
     private class ConnectThread extends Thread{
         private BluetoothSocket mmSocket;
@@ -61,6 +72,7 @@ public class BluetoothConnectionService{
             try {
                 mmSocket.connect();
                 Log.d(TAG,"connection worked");
+                connected=1;
             } catch (IOException e) {
                 try {
                     mmSocket.close();
@@ -68,18 +80,10 @@ public class BluetoothConnectionService{
                     ioException.printStackTrace();
                 }
                 e.printStackTrace();
+                connected=0;
             }
             //all worked
             connected(mmSocket,mmDevice);
-        }
-        public void cancel() {
-            try {
-                Log.d(TAG, "cancel: Closing Client Socket.");
-                mmSocket.close();
-            } catch (IOException e) {
-                Log.e(TAG, "cancel: close() of mmSocket in Connectthread failed. " + e.getMessage());
-            }
-            connected=0;
         }
 
     }
@@ -90,10 +94,8 @@ public class BluetoothConnectionService{
         }
     }
 
-    public void startClient(BluetoothDevice device,UUID uuid){
+    public void startClient(BluetoothDevice device,UUID uuid) throws InterruptedException {
         Log.d(TAG,"started client");
-        mProgressDialog = ProgressDialog.show(mContext,"Connecting Bluetooth"
-                ,"Please Wait...",true);
         mConnectThread = new ConnectThread(device,uuid);
         mConnectThread.start();
     }
@@ -109,7 +111,6 @@ public class BluetoothConnectionService{
             mmSocket = socket;
             InputStream tmpIn=null;
             OutputStream tmpOut=null;
-            mProgressDialog.dismiss();
             try {
                 tmpIn=mmSocket.getInputStream();
             } catch (IOException e) {
@@ -124,13 +125,6 @@ public class BluetoothConnectionService{
             mmOutStream = tmpOut;
         }
         public void run(){
-            Looper.prepare();
-            mHandler = new Handler(Looper.myLooper()) {
-                public void handleMessage(Message msg) {
-                    // process incoming messages here
-                    mProgressDialog.dismiss();
-                }
-            };
             byte[] buffer = new byte[1024];
             int bytes;
             File outputDir = mContext.getCacheDir();
@@ -200,8 +194,11 @@ public class BluetoothConnectionService{
                                 e.printStackTrace();
                             }
                             */
-                            mProgressDialog.dismiss();
-                            //mHandler.sendEmptyMessage(0);
+                            Intent intent = new Intent();
+                            intent.setAction("com.example.uibasic.DONEFILE");
+                            intent.putExtra("data", "Nothing to see here, move along.");
+                            mContext.sendBroadcast(intent);
+
                             Log.d(TAG, "finished getting file");
                         case 51:
                             break;
@@ -240,11 +237,13 @@ public class BluetoothConnectionService{
         mConnectedThread.start();
     }
 
+    public void end(){
+        Log.d(TAG,"ending");
+        mConnectedThread.cancel();
+    }
+
     //write method that accesses connection service
-    public void write(byte[] out,int cas,ProgressDialog dg){
-        if (cas==1){
-            mProgressDialog=dg;
-        }
+    public void write(byte[] out){
         ConnectedThread r;
         Log.d(TAG, "write: Write Called.");
         mConnectedThread.write(out);

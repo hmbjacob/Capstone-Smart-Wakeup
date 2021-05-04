@@ -2,41 +2,52 @@ package com.example.uibasic;
 
 import android.Manifest;
 import android.app.ProgressDialog;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Switch;
+import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Set;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener{
+public class MainActivity extends Activity implements AdapterView.OnItemClickListener{
     private static final String TAG = "MAIN";
 
     //items for connection
     private static final UUID MY_UUID = UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66");
     BluetoothAdapter mBluetoothAdapter;
     BluetoothDevice mBTDevice;
-    BluetoothConnectionService mBluetoothConnection;
-    ProgressDialog mProgressDialog=null;
-
+    public BluetoothConnectionService mBluetoothConnection;
+    public static ProgressDialog mProgressDialog=null;
+    private TimePicker timePicker1;
+    private TextView time;
+    private Calendar calendar;
+    private String format = "";
+    private Button button;
     //buttons
     Button btnStartConnection;
-    Button btnChangeSettings;
-    Button btnRequestFile;
+
 
     //how we display the found devices in the list
     public ArrayList<BluetoothDevice> mBTDevices = new ArrayList<>();
@@ -51,32 +62,37 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             final String action = intent.getAction();
             Log.d(TAG, "onReceive: ACTION FOUND.");
 
-            if (action.equals(BluetoothDevice.ACTION_FOUND)){
-                BluetoothDevice device = intent.getParcelableExtra (BluetoothDevice.EXTRA_DEVICE);
-                mBTDevices.add(device);
-                Log.d(TAG, "onReceive: " + device.getName() + ": " + device.getAddress());
-                mDeviceListAdapter = new DeviceListAdapter(context, R.layout.device_adapter_view, mBTDevices);
-                DeviceList.setAdapter(mDeviceListAdapter);
+            if (action.equals(BluetoothDevice.ACTION_ACL_CONNECTED)){
+                Log.d(TAG, "onReceive: ACTION GOT.");
+                mProgressDialog.dismiss();
+                pepon();
             }
         }
     };
 
+    public void pepon(){
+        Intent intent = new Intent(MainActivity.this, MenuPage.class);
+        startActivity(intent);
+    }
+
     public void startConnection(){
         if(mBTDevice !=null){
+            mProgressDialog= ProgressDialog.show(MainActivity.this, "Connecting", "Please Wait...", true);
+            IntentFilter discoverDevicesIntent = new IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED);
+            registerReceiver(mBroadcastReceiver, discoverDevicesIntent);
             startBTConnection(mBTDevice,MY_UUID);
         } else{
-            Toast.makeText(MainActivity.this,
-                    "Click a device first",
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this,"Click a device first",Toast.LENGTH_SHORT).show();
         }
 
     }
     public void startBTConnection(BluetoothDevice device,UUID uuid) {
         Log.d(TAG, "startBTconnection");
-        mBluetoothConnection.startClient(device, uuid);
-        Toast.makeText(MainActivity.this,
-                R.string.success,
-                Toast.LENGTH_SHORT).show();
+        try {
+            mBluetoothConnection.startClient(device, uuid);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -100,11 +116,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btnStartConnection=(Button) findViewById((R.id.btnStartConnection));
-        btnChangeSettings=(Button) findViewById((R.id.btnChangeSettings));
-        btnRequestFile=(Button) findViewById((R.id.btnRequestFile));
         mBTDevices = new ArrayList<>();
 
-        DeviceList=(ListView) findViewById((R.id.DeviceList));
         DeviceList=(ListView) findViewById(R.id.DeviceList);
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         DeviceList.setOnItemClickListener(MainActivity.this);
@@ -119,45 +132,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
         mDeviceListAdapter = new DeviceListAdapter(getApplicationContext(), R.layout.device_adapter_view, mBTDevices);
         DeviceList.setAdapter(mDeviceListAdapter);
+
         btnStartConnection.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startConnection();
             }
         });
-
-        btnChangeSettings.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendMessage("1",0);
-            }
-        });
-        btnRequestFile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendMessage("2",1);
-            }
-        });
         Log.d(TAG, "finished startup");
     }
 
-    private void sendMessage(String message,int cas) {
-        // Check that we're actually connected before trying anything
-        if (mBluetoothConnection.connected==0) {
-            Toast.makeText(MainActivity.this, R.string.connected_bool, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        mProgressDialog=null;
-        // Check that there's actually something to send
-        if (message.length() > 0) {
-            // Get the message bytes and tell the BluetoothChatService to write
-            byte[] send = message.getBytes();
-            if (cas==1){
-                mProgressDialog= ProgressDialog.show(MainActivity.this, "Transferring file", "Please Wait...", true);
-            }
-            mBluetoothConnection.write(send,1,mProgressDialog);
-        }
-    }
     @Override
     protected void onDestroy() {
         Log.d(TAG, "onDestroy: called.");
@@ -184,7 +168,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             mBTDevices.get(i).createBond();
 
             mBTDevice = mBTDevices.get(i);
-            mBluetoothConnection = new BluetoothConnectionService(MainActivity.this);
+            //mBluetoothConnection = new BluetoothConnectionService(MainActivity.this);
+            mBluetoothConnection = BluetoothConnectionService.getInstance();
+
+            // need to set Context to use ProgressDialog.
+            mBluetoothConnection.setContext(getApplicationContext());
             Log.d(TAG, "Paired with " + deviceName);
         }
     }
