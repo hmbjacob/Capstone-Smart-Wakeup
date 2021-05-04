@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <wiringPi.h>
+//#include <wiringPi.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
@@ -11,22 +11,7 @@
 #include <errno.h>
 #include "time.h"
 
-#define IDLE 0
-#define SLEEP 1
-//#define WAKE_INIT 2
-//#define WAKE_BEGIN 3
-#define WAKING 2
-#define FORCE_WAKE 3
-#define NORMAL_WAKE 4
-#define MANUAL_LIGHT 5
-//#define FULL_BRIGHTNESS 8
-#define ON 1
-#define OFF 0
-#define DONE 0
-#define LIGHT 1
-#define DEEP 2
 
-#define PWM_PIN 1
 
 int main(){
 
@@ -37,10 +22,28 @@ int main(){
     int state = 0;
     int alarm = 0;
     int intensity = 0;
+    int Input_time;
+    int BPM;
+    int Light_Switch;
+    int brightness = 0;
+    int Full_Bright_Time = 10;
+
     wiringPiSetup () ;
     pinMode(PWM_PIN, PWM_OUTPUT);
     pwmWrite(PWM_PIN, 0);
+    
+    // initialize getting data from output file of sleeping analyse algorithm.
+    FILE *fp;
+    char *line;
+    size_t bufsize = 32;
+    ssize_t read;
+    fp = fopen("state_data.txt","r");
+    line = (char *) malloc (bufsize + 1);
 
+    if(fp==NULL){
+        printf("\nError: Can't find file\n");
+        exit(0);
+    }
 
     while (1) {
         char inputString[62] = "";
@@ -52,11 +55,7 @@ int main(){
         //==================
 
         int Systime = Parse_sys_time(__TIME__);
-        int Input_time;
-        int BPM;
-        int Light_Switch;
-        int brightness = 0;
-        int Full_Bright_Time = 10;
+        
 
         bool Alarm = false;
         bool Sync_Data = false;
@@ -69,6 +68,20 @@ int main(){
         int N;
         int alarm_option = 0;
         Parse_Parameters(Input_time, alarm_option, Light_Switch);
+
+        // get data from the sleeping algorithm
+        if((read=getline(&line,&bufsize,fp))!=-1){
+            Sleep_State = Parse_State(line);
+            brightness  = Parse_Brightness(line);
+            // ================================
+            // NEED to inplement stall for demo
+            // ================================
+        }
+
+
+
+
+
         fgets(inputString, 62, stdin); //get the input & save
         //printf("%s", inputString);
         if(strcmp(inputString,"LIGHT\n")==0){
@@ -243,6 +256,7 @@ int main(){
 
     }
 
-
+    free(line);
+    fclose(fp);
     return 1;
 }

@@ -84,3 +84,58 @@ int Parse_sys_time(char *time){
 	
 	
 }
+
+
+
+
+int Parse_State(char *time){
+	
+	
+	
+	char* Token;
+	char sys_time[1024];
+	strcpy(sys_time,time);
+	
+	Token = strtok(sys_time, " ");
+	
+	if(strcmp(Token,"DEEP")==0){
+		
+		return DEEP;
+		printf("STATE:%s\n",Token);
+	} else if(strcmp(Token,"LIGHT")==0){
+		
+		return LIGHT;
+	} else if(strcmp(Token,"DONE")==0){
+		
+		return DONE;
+	}
+
+	Token = strtok(NULL, " ");
+	
+	
+	Token = strtok(NULL, " ");
+	
+	
+
+}
+
+int Parse_Brightness(char *time){
+	
+	
+	
+	char* Token;
+	char sys_time[1024];
+	strcpy(sys_time,time);
+	
+	Token = strtok(sys_time, " ");
+	
+
+	Token = strtok(NULL, " ");
+	printf("Token:%s\n",Token);
+	return (int) atof(Token);
+	
+	Token = strtok(NULL, " ");
+	
+	
+
+}
