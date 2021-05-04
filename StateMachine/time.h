@@ -46,3 +46,5 @@ int Parse_State(char *time);
 
 
 int Parse_Brightness(char *time);
+
+void parse_time_print(int time);
