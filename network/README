@@ -1,4 +1,3 @@
-This is a client and server bluetooth setup with the Pi as a server and Android phone as the client.
+UIBasic: Android app that can change settings and retrieve the sleep data from the py server.
 
-UIBasic: App built from scratch. Can connect, have yet to migrate communication functionality over yet.
-server.py: BT server that responds to queries
+serv.py: server that stays up, ready to change settings and send files.
