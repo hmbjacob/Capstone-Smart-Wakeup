@@ -14,8 +14,8 @@ int main(){
 	int time, alarm, manual;
 	int state, brightness;
 	printf("%s\n", __TIME__);
-	Parse_Parameters( time, alarm, manual);
-	printf("Total_time: %d\n",Parse_Parameters( time, alarm, manual));
-	
-	printf("STATE:%d, brightness:%d\n",Parse_State("DEEP 15"),Parse_Brightness("DEEP 15"));
+	//Parse_Parameters( time, alarm, manual);
+	printf("Total_time: %d\n",Parse_InputTime());
+	printf("Alarm: %d\n",Parse_Alarm());
+	printf("Manual: %d\n",Parse_Manual());
 }

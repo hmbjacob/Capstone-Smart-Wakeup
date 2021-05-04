@@ -33,7 +33,11 @@
 int time_transfer(int hour, int min);
 
 
-int Parse_Parameters( int time, int alarm, int manual);
+int Parse_InputTime();
+
+int Parse_Alarm();
+
+int Parse_Manual();
 
 int Parse_sys_time(char *time);
 
