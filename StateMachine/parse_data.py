@@ -15,6 +15,10 @@ from sklearn.svm import SVC
 
 plt.ion()
 
+def clear_logfile(f_name):
+    with open(f_name, "r+") as writer:
+        writer.truncate(0)
+
 class Sleeper:
     def __init__(self, duration, config_file):
         #TODO: add timescale functionality
@@ -31,7 +35,7 @@ class Sleeper:
         self.predictive_max = f.readline()      # earliest wakeup where a state transition will be permitted
         self.num_divisions = int(f.readline())  # how many steps to break wakeup into, bounded [1, 100] on Windows and [1, 1000] on Unix due to clock limits (for now)
         self.port = int(f.readline())           # port for local communication to send control signals
-        self.log_file = f.readline()
+        self.log_file = f.readline()[:-1]       # ouput logfile
         self.use_data = f.readline()            # whether or not to use predictive wakeup feature
         self.data_file = f.readline()           # (optional) dataset for predictive optimal wakeup
         self.sets = f.readline().split(';')     # (optional) additional datasets for prediction
@@ -39,6 +43,16 @@ class Sleeper:
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect(('localhost', self.port))
+
+        self.max = 0
+        self.bk_avg_counter = 0
+        self.bucket = []
+        self.prev_buckets_avg = []
+        self.state = "LIGHT "
+        #self.prev_state = "LIGHT "
+        for k in range(10):
+            self.bucket.append(float(0))
+            self.prev_buckets_avg.append(float(0))
 
         #self.clf = svm.SVC(gamma = 0.001, C = 100.0)
         #self.train_data = load_svmlight_file(self.data_file)                    # caveat: data must be of form line by line < [identifier] [feature-id]:[value] ... >
@@ -48,6 +62,43 @@ class Sleeper:
         # plt.ylabel("Time (s)")
         # plt.show()
 
+    def fill_bucket(self, pos, val):
+        if val > self.max:
+            self.max = val
+        self.bucket[pos % 10] = val
+
+    def get_bucket_avg(self):
+        tmp = float(0)
+        for i in range(10):
+            tmp = tmp + self.bucket[i]
+        tmp = tmp / 10
+        return tmp
+
+    def fill_bucket_avg(self, pos, val):
+        if (pos % 10 == 0):
+            self.prev_buckets_avg[self.bk_avg_counter % 10] = self.get_bucket_avg()
+            self.bk_avg_counter = self.bk_avg_counter + 1
+
+    def get_state(self, pos):
+        n_count = int(0)
+        my_sum = float(0)
+        for ii in range(10):
+            if (self.prev_buckets_avg[ii] != 0) and (ii != pos):
+                my_sum = my_sum + self.prev_buckets_avg[ii]
+                n_count = n_count + 1
+        my_sum = my_sum / n_count
+        if(self.prev_buckets_avg[pos % 10] > my_sum):
+            if(self.prev_buckets_avg[pos % 10] > (my_sum * 1.0)):
+               self.state = "LIGHT "
+        else:
+            if(self.prev_buckets_avg[pos % 10] < (my_sum * 1.0)):
+               self.state = "DEEP "
+        print(str(self.prev_buckets_avg[pos % 10]) + " " + str(my_sum))
+
+    def log(self, line):
+        with open(self.log_file, "a+") as writer:
+            writer.write(str(line+"\n"))
+        
     def graph_baseline(self):                   # graph historical dataset files using format
         self.fig, (self.ax, self.ax2) = plt.subplots(2)
         self.x = []
@@ -224,6 +275,16 @@ class Sleeper:
                 linez.set_xdata(np.append(linez.get_xdata(), float(elapsed)))
                 linez.set_ydata(np.append(linez.get_ydata(), float(split_tupple[1])))
 
+                self.fill_bucket(elapsed, float(split_tupple[1]))
+                if (elapsed % 10 == 0):
+                    self.fill_bucket_avg(elapsed, self.get_bucket_avg())
+                    self.get_state(self.bk_avg_counter)
+                    if (intensity / (len(data)-wk_start-1) <= 0):
+                        self.log(self.state + str(intensity / (len(data)-wk_start-1)))
+
+                if (intensity / (len(data)-wk_start-1) > 0):
+                    self.log(self.state + str(100 * (intensity / (len(data)-wk_start-1)))[:6])
+
                 line_intensity.set_xdata(np.append(line_intensity.get_xdata(), elapsed))
                 if elapsed >= wk_start:
                     val = intensity / (len(data) - wk_start - 1)
@@ -240,6 +301,7 @@ class Sleeper:
                 self.ax2.autoscale_view()
                 self.fig.canvas.draw()
                 self.fig.canvas.flush_events()
+                
                 if elapsed % 20 == 0 and elapsed < wk_start:
                     self.send_com(str("DEEP 0.0").encode())
 
@@ -253,6 +315,7 @@ class Sleeper:
         
 if __name__ == '__main__':
     S1 = Sleeper(100, "sleep_config.txt")
+    clear_logfile(S1.log_file)
     while True:
         print("Run Simulation? (y/n)")
         do_sim = str(input())
@@ -262,8 +325,11 @@ if __name__ == '__main__':
         S1.graph_baseline()
         # S1.simple()
         # S1.manage()
+        S1.log(str("DONE 0"))
         if do_sim == 'y' or do_sim == 'Y':
             S1.sim(10000, "datasets/acc_fake_1.txt")
-            S1.send_com("WAKE 100.0".encode())
+            S1.send_com(str(S1.state + "100.0").encode())
+            S1.log(str(S1.state + "100.0"))
             time.sleep(0.25)
             S1.send_com("DONE 100.0".encode())
+            S1.log("DONE 100.0")
