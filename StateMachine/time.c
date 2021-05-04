@@ -219,3 +219,9 @@ int Parse_Brightness(char *time){
 	
 
 }
+
+void parse_time_print(int time){
+	int hr = time/60;
+	int min = time - hr*60;
+	printf("(hr%d:min%d)",hr,min);
+}
