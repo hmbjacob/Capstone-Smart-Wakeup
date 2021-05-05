@@ -31,14 +31,14 @@ class Sleeper:
         self.dyn_y = []
 
         f = open(config_file, "r")
-        self.name = f.readline()
+        self.name = f.readline()[:-1]
         self.wakeup_span = int(f.readline())    # float val of num minutes to perform the wakeup cycle
         self.predictive_max = f.readline()      # earliest wakeup where a state transition will be permitted
         self.num_divisions = int(f.readline())  # how many steps to break wakeup into, bounded [1, 100] on Windows and [1, 1000] on Unix due to clock limits (for now)
         self.port = int(f.readline())           # port for local communication to send control signals
         self.log_file = f.readline()[:-1]       # ouput logfile
         self.use_data = f.readline()            # whether or not to use predictive wakeup feature
-        self.data_file = f.readline()           # (optional) dataset for predictive optimal wakeup
+        self.data_file = f.readline()[:-1]      # (optional) dataset for predictive optimal wakeup
         self.sets = f.readline().split(';')     # (optional) additional datasets for prediction
         f.close()
 
@@ -126,8 +126,9 @@ class Sleeper:
             dataset =  fd.readlines()
             fd.close()
             lc = 0
-            for line in dataset[:-1]:
+            for line in dataset[1:-1]:
                 split_tupple = line.split(';')
+                split_tupple[1] = split_tupple[1].split('\n')[0]
                 if len(self.x) > lc:            # average the datasets
                     n_counted[lc] = n_counted[lc] + 1
                     self.y[lc] = (float(self.y[lc]*(n_counted[lc]-1)) + float(split_tupple[1])) / n_counted[lc]
@@ -149,7 +150,7 @@ class Sleeper:
             dataset = fd.readlines()
             fd.close()
             lc = int(0)
-            for line in dataset[:-1]:
+            for line in dataset[1:-1]:
                 #print(line)
                 split_tupple = line.split(';')
                 split_tupple[1] = split_tupple[1].split('\n')[0]
@@ -180,7 +181,7 @@ class Sleeper:
         self.ax3.autoscale_view()
         #self.ax.set_yticks(self.ax.get_yticks()[::10])
         self.ax.set_xticks(self.ax.get_xticks()[::10])
-        self.ax3.set_yticks(self.ax3.get_yticks()[::12])
+        self.ax3.set_yticks(self.ax3.get_yticks()[::15])
         #self.ax3.set_xticks(self.ax3.get_xticks()[::100])
 
         t_lines = l1 + l2
@@ -266,7 +267,7 @@ class Sleeper:
         # self.ax_int.grid()
         self.ax2.grid()
         
-        with open(run_file) as reader:
+        with open(self.data_file) as reader:
             data = reader.readlines()
             wk_start = len(data) - int(float(float(self.wakeup_span) / float(self.duration)) * len(data))
             print(wk_start)
@@ -274,11 +275,13 @@ class Sleeper:
             
             elapsed = 0
             intensity = 0
-            for line in data[:-1]:
+            for line in data[1:-1]:
                 time.sleep(1/speedup)
                 elapsed = elapsed + 1
                 split_tupple = line.split(';')
                 split_tupple[1] = split_tupple[1][:-1]
+                print(split_tupple[1])
+                #split_tupple[1] = split_tupple[1].split('\n')[0]
                 linez.set_xdata(np.append(linez.get_xdata(), float(elapsed)))
                 linez.set_ydata(np.append(linez.get_ydata(), float(split_tupple[1])))
 
@@ -343,7 +346,7 @@ if __name__ == '__main__':
         # S1.manage()
         S1.log(str("DONE 0"))
         if do_sim == 'y' or do_sim == 'Y':
-            S1.sim(10000, "datasets/acc_fake_1.txt")
+            S1.sim(10000, "datasets/hrv_fake_4.txt")
             S1.send_com(str(S1.state + "100.0").encode())
             S1.log(str(S1.state + "100.0"))
             time.sleep(0.25)
