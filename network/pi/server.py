@@ -25,12 +25,14 @@ bluetooth.advertise_service(server_sock, "SampleServer", service_id=uuid,
                             # protocols=[bluetooth.OBEX_UUID]
                             )
 
-print("Waiting for connection on RFCOMM channel", port)
 
-client_sock, client_info = server_sock.accept()
-print("Accepted connection from", client_info)
+
+
 
 while True:
+    print("Waiting for connection on RFCOMM channel", port)
+    client_sock, client_info = server_sock.accept()
+    print("Accepted connection from", client_info)
     try:
         while True:
             data = client_sock.recv(1024)
@@ -48,7 +50,7 @@ while True:
                 client_sock.send(str.encode('1'))
             elif code=='2': # requested file
                 try:
-                    with open("/home/pi/dreamteam9/StateMachine/state_output.txt","rb") as f: #add file called new to your directory to transfer it
+                    with open("/home/pi/dreamteam9/StateMachine/states_output.txt","rb") as f: #add file called new to your directory to transfer it
                         print('opened file')
                         client_sock.send(str.encode(code))
                         print('sent opcode for sending file')
@@ -71,9 +73,7 @@ while True:
                 #client_sock.send(str.encode(temp))
     except OSError as err:
         print("OS error: {0}".format(err))
+    client_sock.close()
+    #server_sock.close()
+    print("All closed.")
 
-
-
-client_sock.close()
-server_sock.close()
-print("All closed.")
