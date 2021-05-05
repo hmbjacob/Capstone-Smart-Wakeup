@@ -1,0 +1,7 @@
+1. Open the StateMachine folder in your terminal
+
+2. Compile the state machine by running
+    sudo gcc -o StateM StateM.c time.c -lwiringPi
+
+3. Run the state machine under sudo
+    sudo ./StateM 

@@ -1,4 +1,16 @@
-# Run these commands (requires pip)
+# You need python3, pip and more specifically pip3 (ignore these first 2 if you already have these)
 python -m pip install -U pip
-python -m pip install -U matplotlib
-pip install -U scikit-learn
+sudo apt-get -y install python3-pip
+
+# Run these to get scikit and matplotlib
+sudo pip3 install matplotlib
+pip3 install -U scikit-learn
+
+# If scipy says you need a newer version of numpy
+pip3 install numpy --upgrade
+
+# If you get error libf77blas.so.3: cannot open shared object file: No such file or directory
+sudo apt-get install libatlas-base-dev
+
+# If the figure doesn't display and you get TypeError: ... 'cairo.Context'
+sudo apt-get install python3-gi-cairo

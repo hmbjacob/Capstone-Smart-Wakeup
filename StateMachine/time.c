@@ -48,9 +48,11 @@ int Parse_InputTime(){
 	Token = strtok(NULL, ";");
 	
 	fclose(fp);
+	// get the input time in unit of mins
 	return time_transfer(hr,min);
 }
 
+// Parse the Alarm parameter
 int Parse_Alarm(){
 	FILE* fp;
 	char buff[1024];
@@ -68,26 +70,17 @@ int Parse_Alarm(){
 		printf("\nError: Can't find file\n");
 		exit(0);
 	}
-	
 	Token = strtok(buff, ":");
 	// Seperate by space: to form one HH:MM;1/0;1/0
-	hr = atoi(Token);
-		
+	hr = atoi(Token);	
 	Token = strtok(NULL, ";");
 	min = atoi(Token);
-		
-	
-	
 	Token = strtok(NULL, ";");
+	// GET Alarm value
 	int alarm = atoi(Token);
-	//printf("\nalarm:%d\n",alarm);
 	Token = strtok(NULL, ";");
-	//manual = atoi(Token);
-	//printf("\nmanual:%d\n",manual);
-	 
-	//printf("\ntime:%d\n",time);
-	
 	fclose(fp);
+	// return alarm value
 	return alarm;
 }
 
@@ -115,19 +108,11 @@ int Parse_Manual(){
 		
 	Token = strtok(NULL, ";");
 	min = atoi(Token);
-		
-	
-	
 	Token = strtok(NULL, ";");
-	//alarm = atoi(Token);
-	//printf("\nalarm:%d\n",alarm);
 	Token = strtok(NULL, ";");
 	int manual = atoi(Token);
-	//printf("\nmanual:%d\n",manual);
-	 
-	//printf("\ntime:%d\n",time);
-	
 	fclose(fp);
+	// get the manual parameter
 	return manual;
 }
 //Parse system time
@@ -170,14 +155,12 @@ int Parse_State(char *time){
 	
 	Token = strtok(sys_time, " ");
 	
-	if(strcmp(Token,"DEEP")==0){
-		
+	// return the sleep state in int
+	if(strcmp(Token,"DEEP")==0){		
 		return DEEP;
-	} else if(strcmp(Token,"LIGHT")==0){
-		
+	} else if(strcmp(Token,"LIGHT")==0){		
 		return LIGHT;
-	} else if(strcmp(Token,"DONE")==0){
-		
+	} else if(strcmp(Token,"DONE")==0){		
 		return DONE;
 	}
 
@@ -200,7 +183,7 @@ int Parse_Brightness(char *time){
 	
 	Token = strtok(sys_time, " ");
 	
-
+	// return brightness in int
 	Token = strtok(NULL, " ");
 	return (int) atof(Token);
 	Token = strtok(NULL, " ");
@@ -213,6 +196,7 @@ char* parse_time_print(int time){
 	int hr = time/60;
 	int min = time - hr*60;
 	static char str[40];
+	// parse the time back to string for output to file
 	sprintf(str,"%d:%d",hr,min);
 	return str;
 	
