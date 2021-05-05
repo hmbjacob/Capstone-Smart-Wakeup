@@ -27,8 +27,9 @@ int main(){
     int Light_Switch;
     int brightness = 0;
     int Full_Bright_Time = 10;
-    int Systime = 115;
+    int Systime = 256;
 
+    // Initialize PWM and pins
     wiringPiSetup () ;
     pinMode(PWM_PIN, PWM_OUTPUT);
     pwmWrite(PWM_PIN, 0);
@@ -38,20 +39,24 @@ int main(){
     char *line;
     size_t bufsize = 32;
     ssize_t read;
-    fp = fopen("state_data.txt","r");
+    fp = fopen("/logs/logfile.txt","r");
     line = (char *) malloc (bufsize + 1);
-    
+    // open file to write
     FILE *fw;
     fw = fopen( "state_output.txt" , "w" );
     fclose(fw);
     char feedback_str[80];
 
+    // Return error if file failed to open
     if(fp==NULL){
         printf("\nError: Can't find file\n");
         exit(0);
     }
 
+
+    // Main polling loop
     while (1) {
+        // open file to append data to the output file
         char inputString[62] = "";
         fw = fopen( "state_output.txt" , "a" );
         //==================
@@ -71,20 +76,22 @@ int main(){
         //int Systime = Parse_sys_time(__TIME__);
         
         
-
+        // variables for alarm control
         bool Alarm = false;
+        int Alarm_Start_time=0;
+        bool alarm_start = false; 
         bool Sync_Data = false;
         // Start_time: record when the start sequence start.
-        // Current_BPM: record the current BPM when the sequence starts
-        // N: Count number, start with 1
         // These values are initialized in the WAKE_INIT State
         int Start_time;
-        int Current_BPM;
-        int N;
         int alarm_option = 0;
+
+        // Parse Input parameters
         Input_time = Parse_InputTime();
         alarm_option = Parse_Alarm();
         Light_Switch = Parse_Manual();
+
+        // Parse data from Nick's output file
         char input_time[80];
         strcpy(input_time, parse_time_print(Input_time));
         char sys_time[40];
@@ -94,10 +101,7 @@ int main(){
         // get data from the sleeping algorithm
         if((read=getline(&line,&bufsize,fp))!=-1){
             Sleep_State = Parse_State(line);
-            brightness  = Parse_Brightness(line);
-            // ================================
-            // NEED to inplement stall for demo
-            // ================================
+            brightness  = Parse_Brightness(line); 
         }
 
 
@@ -168,11 +172,11 @@ int main(){
                 // If the User is ready to be wake by full brightness, Go back to Wake begin to increase time
                 } else if(Sleep_State==DONE&&(Systime>=Input_time)){
                     state = FORCE_WAKE;
-                    printf("in state WAKING, next state FULL_BRIGHTNESS\n");
+                    printf("in state WAKING, next state FORCE_WAKE\n");
                 // otherwise, stay in WAKING
                 } else if(Sleep_State==DONE&&(Systime<Input_time)){
                     state = NORMAL_WAKE;
-                    printf("in state WAKING, next state FULL_BRIGHTNESS\n");
+                    printf("in state WAKING, next state NORMAL_WAKE\n");
                 // otherwise, stay in WAKING
                 } else{
                     printf("in state WAKING, next state WAKING\n");
@@ -239,18 +243,40 @@ int main(){
                 break;
         }
         
+
+        // Make sure the Light is OFF at the IDLE state
         if(state == IDLE)
             intensity = 0;
+        // Make sure the Light is at full brightness at the Manual Light state
         else if(state == MANUAL_LIGHT)
             intensity = 500;
         else
+        // Modify brightness according to the output from Nick's Algorithm 
             intensity = brightness*5;
         
         
             
-            
+        // Write value to PWM
         pwmWrite(PWM_PIN, intensity);
         
+        // Turn on the alarm if necessary
+
+        if(Alarm == true){
+            Alarm_Start_time = Systime;
+            Alarm = false;
+            alarm_start = true;
+            // Turn on the alarm here
+        }
+
+        if(Systime>=Alarm_Start_time+1&&alarm_start){
+            // Turn off the alarm here
+        }
+
+
+        // ================================================
+        // The following section output the state and systime
+        // to the output file to transmit to Phone APP
+        // ================================================
         char feedback_light[19];
         
         //NOT SLEEP
@@ -275,13 +301,14 @@ int main(){
                 fputs(feedback_deep, fw);
             //}
         }
+        // Close file after write one line
        fclose(fw);
-        //printf("%s\n",feedback_light);
+       
         
 
 
     }
-
+    // close and free pointers
     free(line);
     fclose(fp);
     fclose(fw);
