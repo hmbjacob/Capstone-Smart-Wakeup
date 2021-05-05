@@ -14,13 +14,14 @@ from sklearn.linear_model import Ridge
 from sklearn.svm import SVC
 
 plt.ion()
+plt.rcParams['figure.figsize'] = (16, 9)
 
 def clear_logfile(f_name):
     with open(f_name, "r+") as writer:
         writer.truncate(0)
 
 class Sleeper:
-    def __init__(self, duration, config_file):
+    def __init__(self, duration, df, config_file):
         #TODO: add timescale functionality
         self.duration = int(duration)
         self.time_start = datetime.datetime.now()
@@ -40,6 +41,9 @@ class Sleeper:
         self.data_file = f.readline()           # (optional) dataset for predictive optimal wakeup
         self.sets = f.readline().split(';')     # (optional) additional datasets for prediction
         f.close()
+
+        if (df != "__no__"):
+            self.data_file = df
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect(('localhost', self.port))
@@ -164,22 +168,28 @@ class Sleeper:
         print(str(len(self.y_acc)))
         print(str(len(self.x)))
         self.ax.set_autoscaley_on(True)
-        self.ax.plot(self.x_acc, self.y_acc, color = 'blue', linestyle = 'solid', linewidth = 1)
+        l1 = self.ax.plot(self.x_acc, self.y_acc, color = 'blue', linestyle = 'solid', linewidth = 1, label = 'Acceleration Data')
         self.ax.tick_params(axis = 'y', labelcolor = 'blue')
 
-        #self.ax3 = self.ax.twinx()
-        #self.ax3.set_autoscaley_on(True)
-        self.ax.plot(self.x, self.y, color = 'green', linestyle = 'solid', linewidth = 1)
-        self.ax.tick_params(axis = 'y', labelcolor = 'green')
+        self.ax3 = self.ax.twinx()
+        
+        self.ax3.set_autoscaley_on(True)
+        l2 = self.ax3.plot(self.x, self.y, color = 'green', linestyle = 'solid', linewidth = 1, label = 'Heart Rate Variability Data')
+        self.ax3.tick_params(axis = 'y', labelcolor = 'green')
         self.ax.autoscale_view()
-        self.ax.set_yticks(self.ax.get_yticks()[::10])
-        self.ax.set_xticks(self.ax.get_xticks()[::100])
-            
+        self.ax3.autoscale_view()
+        #self.ax.set_yticks(self.ax.get_yticks()[::10])
+        self.ax.set_xticks(self.ax.get_xticks()[::10])
+        self.ax3.set_yticks(self.ax3.get_yticks()[::12])
+        #self.ax3.set_xticks(self.ax3.get_xticks()[::100])
+
+        t_lines = l1 + l2
+        lbs = [ll.get_label() for ll in t_lines]
+        self.ax.legend(t_lines, lbs, loc = 0)
         plt.gcf().autofmt_xdate()
         plt.xlabel('Time')
-        plt.ylabel('HRV(B) & ACC(G)')
-        plt.title('Dynamic HRV Graph (Debug)')
-            # plt.ion()
+        #plt.ylabel('HRV(B) & ACC(G)')
+        plt.title('HRV and ACC Composite Data')
         plt.show()
 
     def send_com(self, msg):
@@ -242,10 +252,7 @@ class Sleeper:
 
     def sim(self, speedup, run_file):
         # Data points will be read at a rate of 1 * speedup per second
-        #plt.ion()
         self.ax_int = self.ax2.twinx()
-
-        print("In sim")
 
         sim_x = []
         sim_y = []
@@ -281,9 +288,11 @@ class Sleeper:
                     self.get_state(self.bk_avg_counter)
                     if (intensity / (len(data)-wk_start-1) <= 0):
                         self.log(self.state + str(intensity / (len(data)-wk_start-1)))
+                        self.send_com(str(self.state + str(intensity / (len(data)-wk_start-1))).encode())
 
                 if (intensity / (len(data)-wk_start-1) > 0):
                     self.log(self.state + str(100 * (intensity / (len(data)-wk_start-1)))[:6])
+                    self.send_com(str(self.state + str(100 * (intensity / (len(data)-wk_start-1)))[:6]).encode())
 
                 line_intensity.set_xdata(np.append(line_intensity.get_xdata(), elapsed))
                 if elapsed >= wk_start:
@@ -291,7 +300,7 @@ class Sleeper:
                     line_intensity.set_ydata(np.append(line_intensity.get_ydata(), (intensity / (len(data) - wk_start - 1))))
                     print(intensity / (len(data) - wk_start))
                     intensity = intensity + 1
-                    self.send_com(str("DEEP " + str(100 * val)).encode())
+                    #self.send_com(str("DEEP " + str(100 * val)).encode())
                 else:
                     line_intensity.set_ydata(np.append(line_intensity.get_ydata(), 0))
                     
@@ -302,8 +311,8 @@ class Sleeper:
                 self.fig.canvas.draw()
                 self.fig.canvas.flush_events()
                 
-                if elapsed % 20 == 0 and elapsed < wk_start:
-                    self.send_com(str("DEEP 0.0").encode())
+                #if elapsed % 20 == 0 and elapsed < wk_start:
+                #    self.send_com(str("DEEP 0.0").encode())
 
                 #print("Sim")
             #plt.show()
@@ -314,7 +323,14 @@ class Sleeper:
     #    scale
         
 if __name__ == '__main__':
-    S1 = Sleeper(100, "sleep_config.txt")
+    print("Specify Dataset? (y/n)")
+    use_ds = str(input())
+    if use_ds == 'y' or use_ds == 'Y':
+        print("Enter datafile:")
+        df = str(input())
+        S1 = Sleeper(100, df, "sleep_config.txt")
+    else:
+        S1 = Sleeper(100, "__no__", "sleep_config.txt")
     clear_logfile(S1.log_file)
     while True:
         print("Run Simulation? (y/n)")
