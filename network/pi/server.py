@@ -39,16 +39,16 @@ while True:
             code=str(data)[2]
             #print(data)
             if code=='1': # change settings
-                with open('config.txt','r') as f:
+                with open('/home/pi/dreamteam9/StateMachine/config.txt','r') as f:
                     settings=f.read()
-                with open('config.txt','w') as f:
-                    f.write(str(data)[3:])
+                with open('/home/pi/dreamteam9/StateMachine/config.txt','w') as f:
+                    f.write(str(data)[4:-1])
                     
                 print('changed settings to: ' + str(data)[4:-1])
                 client_sock.send(str.encode('1'))
             elif code=='2': # requested file
                 try:
-                    with open("state_output.txt","rb") as f: #add file called new to your directory to transfer it
+                    with open("/home/pi/dreamteam9/StateMachine/state_output.txt","rb") as f: #add file called new to your directory to transfer it
                         print('opened file')
                         client_sock.send(str.encode(code))
                         print('sent opcode for sending file')
