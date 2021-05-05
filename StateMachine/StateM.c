@@ -23,7 +23,6 @@ int main(){
     int alarm = 0;
     int intensity = 0;
     int Input_time;
-    int BPM;
     int Light_Switch;
     int brightness = 0;
     int Full_Bright_Time = 10;
@@ -59,20 +58,34 @@ int main(){
         // open file to append data to the output file
         char inputString[62] = "";
         fw = fopen( "state_output.txt" , "a" );
-        //==================
+        //=============================================
         // NOTE: These two variables need to be modified in the future
         //       The first test set these variables from terminal input 
         //       In the future, they will come from file io and system clock.
         //       BPM comes from the ECG.
-        //==================
+        //=============================================
 
+        //=============================================
+        // System time for simulation 
+        // To give a dynamic demo of the device, 0.5 second represents
+        // 5 seconds in real world. The simulation time is implemented 
+        // by adding delay to the function, but in the real application,
+        // the Systime will be parsed in the function after the next
+        // 6 lines.
         delay(500);
         
+        // This simulate the time from sleep time to the end of a day
+        // and the time will increment 5 mins with 0.5 secs in real time.
+        // The system time and input time are transfered to mins here.
+
         if(Systime >= 1440)
             Systime = 120;
         else
             Systime += 5;
-            
+        //===================================================
+        // UNCOMMENT THIS WITH REAL APPLICATION
+        // This will obtain system time in mins
+        //===================================================
         //int Systime = Parse_sys_time(__TIME__);
         
         
