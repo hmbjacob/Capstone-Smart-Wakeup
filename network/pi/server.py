@@ -48,7 +48,7 @@ while True:
                 client_sock.send(str.encode('1'))
             elif code=='2': # requested file
                 try:
-                    with open("New","rb") as f: #add file called new to your directory to transfer it
+                    with open("state_output.txt","rb") as f: #add file called new to your directory to transfer it
                         print('opened file')
                         client_sock.send(str.encode(code))
                         print('sent opcode for sending file')
