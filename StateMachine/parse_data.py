@@ -16,6 +16,8 @@ from sklearn.svm import SVC
 plt.ion()
 plt.rcParams['figure.figsize'] = (16, 9)
 
+# Add no graph mode
+
 def clear_logfile(f_name):
     with open(f_name, "r+") as writer:
         writer.truncate(0)
@@ -53,6 +55,7 @@ class Sleeper:
         self.bucket = []
         self.prev_buckets_avg = []
         self.state = "LIGHT "
+        self.do_g = True
         #self.prev_state = "LIGHT "
         for k in range(10):
             self.bucket.append(float(0))
@@ -65,6 +68,12 @@ class Sleeper:
         # plt.xlabel("HRV")
         # plt.ylabel("Time (s)")
         # plt.show()
+
+    def enable_graph(self):
+        self.do_g = True
+
+    def disable_graph(self):
+        self.do_g = False
 
     def fill_bucket(self, pos, val):
         if val > self.max:
@@ -253,19 +262,23 @@ class Sleeper:
 
     def sim(self, speedup, run_file):
         # Data points will be read at a rate of 1 * speedup per second
-        self.ax_int = self.ax2.twinx()
 
-        sim_x = []
-        sim_y = []
+        if self.do_g == True:
+            print("Good")
+            time.sleep(10)
+            self.ax_int = self.ax2.twinx()
 
-        # g1, ax3 = plt.subplots()
-        linez, = self.ax2.plot([],[], color = 'blue', linewidth = 1)
-        line_intensity, = self.ax_int.plot([],[], color = 'red', linestyle = 'dashed', linewidth = 1)
-        self.ax_int.set_ylim([-0.025, 1])
-        self.ax2.set_autoscaley_on(True)
-        # self.ax_int.set_autoscaley_on(True)
-        # self.ax_int.grid()
-        self.ax2.grid()
+            sim_x = []
+            sim_y = []
+
+            # g1, ax3 = plt.subplots()
+            linez, = self.ax2.plot([],[], color = 'blue', linewidth = 1)
+            line_intensity, = self.ax_int.plot([],[], color = 'red', linestyle = 'dashed', linewidth = 1)
+            self.ax_int.set_ylim([-0.025, 1])
+            self.ax2.set_autoscaley_on(True)
+            # self.ax_int.set_autoscaley_on(True)
+            # self.ax_int.grid()
+            self.ax2.grid()
         
         with open(self.data_file) as reader:
             data = reader.readlines()
@@ -282,8 +295,10 @@ class Sleeper:
                 split_tupple[1] = split_tupple[1][:-1]
                 print(split_tupple[1])
                 #split_tupple[1] = split_tupple[1].split('\n')[0]
-                linez.set_xdata(np.append(linez.get_xdata(), float(elapsed)))
-                linez.set_ydata(np.append(linez.get_ydata(), float(split_tupple[1])))
+
+                if self.do_g == True:
+                    linez.set_xdata(np.append(linez.get_xdata(), float(elapsed)))
+                    linez.set_ydata(np.append(linez.get_ydata(), float(split_tupple[1])))
 
                 self.fill_bucket(elapsed, float(split_tupple[1]))
                 if (elapsed % 10 == 0):
@@ -297,22 +312,26 @@ class Sleeper:
                     self.log(self.state + str(100 * (intensity / (len(data)-wk_start-1)))[:6])
                     self.send_com(str(self.state + str(100 * (intensity / (len(data)-wk_start-1)))[:6]).encode())
 
-                line_intensity.set_xdata(np.append(line_intensity.get_xdata(), elapsed))
+                if self.do_g == True:
+                    line_intensity.set_xdata(np.append(line_intensity.get_xdata(), elapsed))
                 if elapsed >= wk_start:
                     val = intensity / (len(data) - wk_start - 1)
-                    line_intensity.set_ydata(np.append(line_intensity.get_ydata(), (intensity / (len(data) - wk_start - 1))))
+                    if self.do_g == True:
+                        line_intensity.set_ydata(np.append(line_intensity.get_ydata(), (intensity / (len(data) - wk_start - 1))))
                     print(intensity / (len(data) - wk_start))
                     intensity = intensity + 1
                     #self.send_com(str("DEEP " + str(100 * val)).encode())
                 else:
-                    line_intensity.set_ydata(np.append(line_intensity.get_ydata(), 0))
-                    
-                self.ax_int.relim()
-                self.ax_int.autoscale_view()
-                self.ax2.relim()
-                self.ax2.autoscale_view()
-                self.fig.canvas.draw()
-                self.fig.canvas.flush_events()
+                    if self.do_g == True:
+                        line_intensity.set_ydata(np.append(line_intensity.get_ydata(), 0))
+
+                if self.do_g == True:
+                    self.ax_int.relim()
+                    self.ax_int.autoscale_view()
+                    self.ax2.relim()
+                    self.ax2.autoscale_view()
+                    self.fig.canvas.draw()
+                    self.fig.canvas.flush_events()
                 
                 #if elapsed % 20 == 0 and elapsed < wk_start:
                 #    self.send_com(str("DEEP 0.0").encode())
@@ -322,11 +341,10 @@ class Sleeper:
                 
         
     def manage(self):                           # manage control signals from the ECG feeding to the State Machine while asleep
-        uncertainty = 0.25                      # max relative difference between ss
-    #    scale
+        print("no")
         
 if __name__ == '__main__':
-    print("Specify Dataset? (y/n)")
+    print("Specify Dataset? (Y/N)")
     use_ds = str(input())
     if use_ds == 'y' or use_ds == 'Y':
         print("Enter datafile:")
@@ -334,21 +352,37 @@ if __name__ == '__main__':
         S1 = Sleeper(100, df, "sleep_config.txt")
     else:
         S1 = Sleeper(100, "__no__", "sleep_config.txt")
+
+    print("Enable Graphing (Slow)? (Y/N)")
+    do_g = str(input())
+    if do_g == 'n' or do_g == 'N':
+        S1.disable_graph()
+        #plt.ioff()
+    else:
+        S1.enable_graph()
+        plt.ion()
+        
+    
     clear_logfile(S1.log_file)
+    
     while True:
-        print("Run Simulation? (y/n)")
+        print("Run Simulation or Live Transfer? (S/L)")
         do_sim = str(input())
         S1.send_com("DONE 0".encode())
         time.sleep(0.25)
-        #if do_sim != 'y' and do_sim != 'Y':
-        S1.graph_baseline()
-        # S1.simple()
-        # S1.manage()
+        if do_g != 'n' and do_sim != 'N':
+            S1.graph_baseline()
+        # S1.simple
+        # S1.manage
         S1.log(str("DONE 0"))
-        if do_sim == 'y' or do_sim == 'Y':
+        
+        if do_sim == 'y' or do_sim == 'Y' or do_sim == 's' or do_sim == 'S':
             S1.sim(10000, "datasets/hrv_fake_4.txt")
             S1.send_com(str(S1.state + "100.0").encode())
             S1.log(str(S1.state + "100.0"))
             time.sleep(0.25)
             S1.send_com("DONE 100.0".encode())
             S1.log("DONE 100.0")
+            
+        elif do_sim == 'n' or do_sim == 'N' or do_sim == 'l' or do_sim == 'L':
+            S1.manage()
