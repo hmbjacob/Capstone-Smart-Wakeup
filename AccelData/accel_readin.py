@@ -5,6 +5,7 @@
 '''
 import smbus			#import SMBus module of I2C
 import time
+import math
 from time import sleep          #import
 
 #some MPU6050 Registers and their Address
@@ -94,11 +95,12 @@ while True:
     if(time.time() >= tim+inc*j):
         
         file1 = open("AccelData.txt", "a+")
-        print("%d " %j, "%.1f" % (avg/i))
-        line = str(j*inc) + " " + str(int(large)) + "\n"
+        print("%d " %j, "%f" % large)
+        line = str(j*inc) + " " + str(int(10*large)) + "\n"
         file1.write(line)
         i = 0
         avg = 0
+        large = 0
         j = j + 1
         file1.close()
         
