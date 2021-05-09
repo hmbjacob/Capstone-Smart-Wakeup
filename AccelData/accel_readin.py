@@ -86,6 +86,8 @@ while True:
     
     
     val = abs(10*Ax + 10*Ay + 10*Az - old)
+    if (val < .4): val = 0
+    val = math.log(100000*val+1)
     avg = avg + val
     if (val > large):
         large = val
@@ -95,8 +97,8 @@ while True:
     if(time.time() >= tim+inc*j):
         
         file1 = open("AccelData.txt", "a+")
-        print("%d " %j, "%f" % large)
-        line = str(j*inc) + " " + str(int(10*large)) + "\n"
+        print("%d " %j, "%.1f" % (avg/i))
+        line = str(j*inc) + " " + str(avg/i) + "\n"
         file1.write(line)
         i = 0
         avg = 0
