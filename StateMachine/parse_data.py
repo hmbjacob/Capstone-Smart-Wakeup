@@ -4,6 +4,10 @@ import socket
 import asyncio
 import matplotlib.pyplot as plt
 import numpy as np
+import argparse
+import select
+import selectors
+import sys
 from sklearn import datasets
 from sklearn import metrics
 from sklearn.tree import DecisionTreeClassifier
@@ -52,8 +56,8 @@ class Sleeper:
 
         self.max = 0
         self.bk_avg_counter = 0
-        self.bucket = []
-        self.prev_buckets_avg = []
+        self.bucket = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.prev_buckets_avg = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.state = "LIGHT "
         self.do_g = True
         #self.prev_state = "LIGHT "
@@ -111,7 +115,7 @@ class Sleeper:
     def log(self, line):
         with open(self.log_file, "a+") as writer:
             writer.write(str(line+"\n"))
-        
+    
     def graph_baseline(self):                   # graph historical dataset files using format
         self.fig, (self.ax, self.ax2) = plt.subplots(2)
         self.x = []
@@ -202,6 +206,12 @@ class Sleeper:
         plt.title('HRV and ACC Composite Data')
         plt.show()
 
+    def mdecode(self, msg):
+        tmp = msg.rstrip('\n')
+        tmp = msg.split(' ')
+        return [int(tmp[0]), float(tmp[1])]
+            
+
     def send_com(self, msg):
         n_sent = 0
         n_max = len(msg)
@@ -264,8 +274,8 @@ class Sleeper:
         # Data points will be read at a rate of 1 * speedup per second
 
         if self.do_g == True:
-            print("Good")
-            time.sleep(10)
+            #print("Good")
+            #time.sleep(10)
             self.ax_int = self.ax2.twinx()
 
             sim_x = []
@@ -338,31 +348,162 @@ class Sleeper:
 
                 #print("Sim")
             #plt.show()
-                
+    
+    def manage(self, duration_sec, duration_wakeup_minimum):                           # manage control signals from the ECG feeding to the State Machine while asleep
+
+        SIZE = 1024
+        pos = 0
         
-    def manage(self):                           # manage control signals from the ECG feeding to the State Machine while asleep
-        print("no")
+        r_lines = []
+        data = []
+        tupple = []
+        maxim = 0
+        since_last_max = 0
+        intensity = float(0.0)
+        sec_elapsed = int(0)
+
+        prev_t = 0
+        cur_t = 0
+        del_t = 0
+        
+        start_force_wake = duration_sec - duration_wakeup_minimum
+        trigger = False
+        wake_begin = False
+        time_wake_sec = float(duration_wakeup_minimum)
+    
+        #self.sock.listen(1)
+
+        if self.do_g == True:
+            self.ax_int = self.ax2.twinx()
+            linez, = self.ax2.plot([],[], color = 'blue', linewidth = 1)
+            line_intensity, = self.ax_int.plot([],[], color = 'red', linestyle = 'dashed', linewidth = 1)
+            self.ax_int.set_ylim([-0.025, 1])
+            self.ax2.set_autoscaley_on(True)
+            self.ax2.grid()
+
+        while True: # Poll Loop
+            trigger = False
+            with open('../AccelData/AccelData.txt') as reader:
+            # with open('Parse_Test/FakeAccel.txt') as reader:          # Can swap this and the above line out for the purpose of testing
+                r_lines = reader.readlines()
+
+                for line in r_lines[pos:]:
+                    tupple = self.mdecode(line)
+                    print(tupple)
+                    
+                    data.append(tupple)
+                    self.fill_bucket(tupple[0], tupple[1])
+                    prev_t = cur_t
+                    cur_t = tupple[0]
+                    del_t = int(cur_t - prev_t)
+
+                    # Important: with this line the program depends on an accurate elapsed time in the read file
+                    sec_elapsed = tupple[0]
+                    
+                    # In the first part of the night, search for a maximum to compare against
+                    if(tupple[1] > maxim):
+                        maxim = tupple[1]
+                        since_last_max = 0
+                    else:
+                        since_last_max = since_last_max + 1
+                        
+                    # Trigger indicates a probability of wakeup beginning
+                    if(tupple[1] > maxim * 0.75):
+                        trigger = True
+
+                    # If in wakeup, appropriately increment the intensity and send a message
+                    if (wake_begin == True):
+                        time.sleep(0.05)                            # make sure socket has enough time to read msg, then log and send msg on socket
+                        if (intensity < time_wake_sec):
+                            intensity = intensity + del_t
+                            if (intensity > time_wake_sec):
+                                intensity = time_wake_sec
+                                
+                        self.log(self.state + str(100 * (intensity/time_wake_sec))[:6])
+                        self.send_com(str(self.state + str(100 * (intensity/time_wake_sec))[:6]).encode())
+
+                    if (int(sec_elapsed) >= int(start_force_wake)):
+                        wake_begin = True
+                
+                    if (wake_begin == False):
+                        # If it's been over 2.5 hours since the last max value and we are over 3/4 through the sleep cycle, check for an early wakeup
+                        if (since_last_max >= 600 and sec_elapsed > ((duration_sec * 3) / 4)):
+                            # If light sleep and relatively high movement, start the wakeup early
+                            if (self.state == "LIGHT " and trigger == True):
+                                wake_begin = True
+                                time_wake_sec = float(duration_sec - sec_elapsed)
+
+                    print(intensity)
+                    print(time_wake_sec)
+                    print('---')
+    
+                    # Graph stuff
+                    if self.do_g == True:
+                        linez.set_xdata(np.append(linez.get_xdata(), float(tupple[0])))
+                        linez.set_ydata(np.append(linez.get_ydata(), float(tupple[1])))
+                        line_intensity.set_xdata(np.append(line_intensity.get_xdata(), float(tupple[0])))
+                        line_intensity.set_ydata(np.append(line_intensity.get_ydata(), intensity/time_wake_sec))
+
+                        self.ax_int.relim()
+                        self.ax_int.autoscale_view()
+                        self.ax2.relim()
+                        self.ax2.autoscale_view()
+                        self.fig.canvas.draw()
+                        self.fig.canvas.flush_events()
+
+                    if (intensity >= time_wake_sec):
+                        return
+
+                ppos = pos
+                pos = len(r_lines)
+                for jj in range(ppos, pos):
+                    if (jj % 10) == 0:
+                        self.fill_bucket_avg(jj, self.get_bucket_avg())
+                        self.get_state(self.bk_avg_counter)
+                        self.log(self.state + str(100 * (intensity/time_wake_sec))[:6])
+                        self.send_com(str(self.state + str(100 * (intensity/time_wake_sec))[:6]).encode())
+                        time.sleep(0.2)
+
+                print(wake_begin)
+                print(sec_elapsed)
+                print(start_force_wake)
+
+                #if (int(sec_elapsed) >= int(start_force_wake)):
+                #    wake_begin = True
+                #
+                #if (wake_begin == False):
+                #    # If it's been over 2.5 hours since the last max value and we are over 3/4 through the sleep cycle, check for an early wakeup
+                #    if (since_last_max >= 600 and sec_elapsed > ((duration_sec * 3) / 4)):
+                #        # If light sleep and relatively high movement, start the wakeup early
+                #        if (self.state == "LIGHT " and trigger == True):
+                #            wake_begin = True
+                #            time_wake_sec = float(duration_sec - sec_elapsed)
+
+            time.sleep(15)
+            # time.sleep(2)         # for testing, normally 15 second poll intervals
+            # sec_elapsed = sec_elapsed + 15
         
 if __name__ == '__main__':
-    print("Specify Dataset? (Y/N)")
-    use_ds = str(input())
-    if use_ds == 'y' or use_ds == 'Y':
-        print("Enter datafile:")
-        df = str(input())
-        S1 = Sleeper(100, df, "sleep_config.txt")
-    else:
-        S1 = Sleeper(100, "__no__", "sleep_config.txt")
-
-    print("Enable Graphing (Slow)? (Y/N)")
-    do_g = str(input())
-    if do_g == 'n' or do_g == 'N':
-        S1.disable_graph()
-        #plt.ioff()
-    else:
-        S1.enable_graph()
-        plt.ion()
-        
     
+    if (len(sys.argv) <= 1):
+        print("Specify Dataset? (Y/N)")
+        use_ds = str(input())
+        if use_ds == 'y' or use_ds == 'Y':
+            print("Enter datafile:")
+            df = str(input())
+            S1 = Sleeper(100, df, "sleep_config.txt")
+        else:
+            S1 = Sleeper(100, "__no__", "sleep_config.txt")
+
+        print("Enable Graphing (Slow)? (Y/N)")
+        do_g = str(input())
+        if do_g == 'n' or do_g == 'N':
+            S1.disable_graph()
+            #plt.ioff()
+        else:
+            S1.enable_graph()
+            plt.ion()
+        
     clear_logfile(S1.log_file)
     
     while True:
@@ -385,4 +526,14 @@ if __name__ == '__main__':
             S1.log("DONE 100.0")
             
         elif do_sim == 'n' or do_sim == 'N' or do_sim == 'l' or do_sim == 'L':
-            S1.manage()
+            print("Enter duration of sleep in seconds:")
+            sleep_time = int(input())
+            print("Enter minimum duration of wakeup in seconds:")
+            wk_time = int(input())
+            
+            S1.manage(sleep_time, wk_time)
+            S1.send_com(str(S1.state + "100.0").encode())
+            S1.log(str(S1.state + "100.0"))
+            time.sleep(0.25)
+            S1.send_com("DONE 100.0".encode())
+            S1.log("DONE 100.0")
