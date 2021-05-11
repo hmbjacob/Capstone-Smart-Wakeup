@@ -39,7 +39,7 @@ public class GraphPage  extends Activity {
         mContext=getApplicationContext();
 
         GraphView graph =(GraphView) findViewById(R.id.graph);
-        GraphView graph2 =(GraphView) findViewById(R.id.graph2);
+        //GraphView graph2 =(GraphView) findViewById(R.id.graph2);
         series = new LineGraphSeries<DataPoint>();
         series2 = new LineGraphSeries<DataPoint>();
 
@@ -101,13 +101,14 @@ public class GraphPage  extends Activity {
                 data=line.split(";");
                 System.out.println(line);
                 x=Double.parseDouble(data[0]);
-                y=Double.parseDouble(data[1]);
-                series2.appendData(new DataPoint(d+x/60,y),true,2500);
+                y=Double.parseDouble(data[1])-.7;
+                series2.appendData(new DataPoint(d+x/60,y),true,3000);
             }
             Log.d(TAG, "wrote second");
             series2.setColor(Color.RED);
 
-            setGraphProps(graph2,d,((int)(x/60))+d,1.8,8);
+            //setGraphProps(graph2,d,((int)(x/60))+d,1.8,8);
+            /*
             graph2.getGridLabelRenderer().setLabelFormatter(new DefaultLabelFormatter() {
                 @Override
                 public String formatLabel(double value, boolean isValueX) {
@@ -129,7 +130,9 @@ public class GraphPage  extends Activity {
                     }
                 }
             });
-            graph2.addSeries(series2);
+
+             */
+            graph.addSeries(series2);
             Log.d(TAG, "graphed second");
         } catch (IOException e) {
             Toast.makeText(GraphPage.this,"No datafile to parse :(",Toast.LENGTH_SHORT).show();
@@ -155,7 +158,7 @@ public class GraphPage  extends Activity {
 
         graph.getViewport().setYAxisBoundsManual(true);
         graph.getViewport().setXAxisBoundsManual(true);
-        //graph.getGridLabelRenderer().setNumHorizontalLabels(5);
+        graph.getGridLabelRenderer().setNumHorizontalLabels(5);
         graph.getGridLabelRenderer().setNumVerticalLabels(vertLabels);
     }
 
