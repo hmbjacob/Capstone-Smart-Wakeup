@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+import static android.graphics.Color.WHITE;
+
 
 public class GraphPage  extends Activity {
     private static final String TAG ="GraphPage";
@@ -31,6 +33,7 @@ public class GraphPage  extends Activity {
     TextView result;
     LineGraphSeries<DataPoint> series;
     LineGraphSeries<DataPoint> series2;
+
     Context mContext;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,10 +42,16 @@ public class GraphPage  extends Activity {
         mContext=getApplicationContext();
 
         GraphView graph =(GraphView) findViewById(R.id.graph);
+        //graph.setBackgroundColor(Color.WHITE);
+        //graph.set
+
         //GraphView graph2 =(GraphView) findViewById(R.id.graph2);
         series = new LineGraphSeries<DataPoint>();
         series2 = new LineGraphSeries<DataPoint>();
 
+        series.setThickness(4);
+        series.setTitle("Stage");
+        series2.setTitle("Movement");
 
         File outputDir = mContext.getCacheDir();
         String dataFile = outputDir + "/" + File.separator + "state_output.txt";

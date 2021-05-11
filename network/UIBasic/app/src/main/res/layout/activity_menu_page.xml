@@ -48,13 +48,11 @@
         android:layout_width="176dp"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="210dp"
-        android:layout_marginTop="420dp"
-        android:layout_marginEnd="25dp"
-        android:layout_marginBottom="263dp"
+        android:layout_marginStart="19dp"
+        android:layout_marginEnd="216dp"
+        android:layout_marginBottom="45dp"
         android:onClick="UpdateSettings"
         android:text="@string/update_settings" />
 
@@ -64,13 +62,11 @@
         android:layout_width="176dp"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="201dp"
-        android:layout_marginTop="650dp"
-        android:layout_marginEnd="34dp"
-        android:layout_marginBottom="33dp"
+        android:layout_marginStart="212dp"
+        android:layout_marginEnd="23dp"
+        android:layout_marginBottom="46dp"
         android:onClick="OpenGraph"
         android:text="@string/view_sleep_graph" />
 
