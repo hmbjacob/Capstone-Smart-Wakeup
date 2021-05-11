@@ -67,6 +67,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
     };
 
     public void pepon(){
+        unregisterReceiver(mBroadcastReceiver);
         Intent intent = new Intent(MainActivity.this, MenuPage.class);
         startActivity(intent);
     }
@@ -74,8 +75,8 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
     public void startConnection(){
         if(mBTDevice !=null){
             mProgressDialog= ProgressDialog.show(MainActivity.this, "Connecting", "Please Wait...", true);
-            IntentFilter discoverDevicesIntent = new IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED);
-            registerReceiver(mBroadcastReceiver, discoverDevicesIntent);
+            IntentFilter waitIntent = new IntentFilter("com.example.uibasic.DONECONNECT");
+            registerReceiver(mBroadcastReceiver, waitIntent);
             startBTConnection(mBTDevice,MY_UUID);
         } else{
             Toast.makeText(MainActivity.this,"Click a device first",Toast.LENGTH_SHORT).show();
@@ -143,6 +144,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
         Log.d(TAG, "onDestroy: called.");
         super.onDestroy();
         unregisterReceiver(mBroadcastReceiver);
+
     }
     //sets the list so clicking an item will select it for connection
     @Override

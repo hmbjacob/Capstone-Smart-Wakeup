@@ -125,10 +125,14 @@ public class BluetoothConnectionService{
             mmOutStream = tmpOut;
         }
         public void run(){
+            Intent intent = new Intent();
+            intent.setAction("com.example.uibasic.DONECONNECT");
+            intent.putExtra("data", "Nothing to see here, move along.");
+            mContext.sendBroadcast(intent);
             byte[] buffer = new byte[1024];
             int bytes;
             File outputDir = mContext.getCacheDir();
-            String dataFile = outputDir + "/" + File.separator + "test.txt";
+            String dataFile = outputDir + "/" + File.separator + "state_output.txt";
             //keep listening until exception
             while(true){
                 try {
@@ -194,10 +198,10 @@ public class BluetoothConnectionService{
                                 e.printStackTrace();
                             }
                             */
-                            Intent intent = new Intent();
-                            intent.setAction("com.example.uibasic.DONEFILE");
-                            intent.putExtra("data", "Nothing to see here, move along.");
-                            mContext.sendBroadcast(intent);
+                            Intent intent2 = new Intent();
+                            intent2.setAction("com.example.uibasic.DONEFILE");
+                            intent2.putExtra("data", "Nothing to see here, move along.");
+                            mContext.sendBroadcast(intent2);
 
                             Log.d(TAG, "finished getting file");
                         case 51:

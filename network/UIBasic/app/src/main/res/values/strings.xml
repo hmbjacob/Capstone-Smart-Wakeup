@@ -12,4 +12,6 @@
     <string name="wakeup">Wakeup</string>
     <string name="prediction">Prediction</string>
     <string name="set_intervals_seconds">Set intervals (seconds)</string>
+    <string name="your_sleep_states">Your Sleep States</string>
+    <string name="your_movement">Your Movement</string>
 </resources>

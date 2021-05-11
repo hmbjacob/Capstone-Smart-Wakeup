@@ -127,6 +127,7 @@ public class MenuPage extends Activity {
     protected void onDestroy() {
         Log.d(TAG, "onDestroy: called.");
         super.onDestroy();
+        mBluetoothConnection.end();
         try {
             unregisterReceiver(mBroadcastReceiver);
         }catch(IllegalArgumentException e) {
@@ -140,7 +141,7 @@ public class MenuPage extends Activity {
     }
     @Override
     public void onBackPressed() {
-        mBluetoothConnection.end();
+        //mBluetoothConnection.end();
         finish();
     }
 
@@ -193,7 +194,7 @@ public class MenuPage extends Activity {
             // Get the message bytes and tell the BluetoothChatService to write
             byte[] send = message.getBytes();
             if (cas==1){
-                mProgressDialog= ProgressDialog.show(MenuPage.this, "Retrieving sleep data", "Please Wait...", true);
+                mProgressDialog= ProgressDialog.show(MenuPage.this, "Retrieving sleep data", "This may take a while...", true);
             }
             mBluetoothConnection.write(send);
 
