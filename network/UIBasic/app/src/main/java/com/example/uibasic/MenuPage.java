@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -46,11 +47,17 @@ public class MenuPage extends Activity {
     private String ManualLightKey = "com.example.uibasic.manualLight";
     int manualLight;
     int useAlarm;
-
+    private String predictKey = "com.example.uibasic.IntpredictTime";
+    private String wakeupKey = "com.example.uibasic.IntwakeupTime";
 
     TextView time;
     Switch alarmSwitch;
     Switch lightSwitch;
+
+    String wakeupInterval;
+    String predictionInterval;
+    EditText wakeupEdit;
+    EditText predictionEdit;
 
     //waits for disconnect
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
@@ -95,9 +102,20 @@ public class MenuPage extends Activity {
         wakeupHour = pref.getInt(HourTimeKey, calendar.get(Calendar.HOUR_OF_DAY));
         wakeupMin = pref.getInt(MinTimeKey, calendar.get(Calendar.MINUTE));
 
+
+
         time = (TextView) findViewById(R.id.textView2);
         alarmSwitch=(Switch) findViewById(R.id.switch1);
         lightSwitch=(Switch) findViewById(R.id.switch2);
+        wakeupEdit=(EditText) findViewById((R.id.editTextWak));
+        predictionEdit=(EditText) findViewById((R.id.editTextPred));
+
+
+        wakeupInterval= pref.getString(wakeupKey, "24");
+        predictionInterval= pref.getString(predictKey, "30");
+
+        wakeupEdit.setText(wakeupInterval);
+        predictionEdit.setText(predictionInterval);
 
         showTime(wakeupHour, wakeupMin);
         alarmSwitch.setChecked(useAlarm == 1);
@@ -125,6 +143,8 @@ public class MenuPage extends Activity {
         mBluetoothConnection.end();
         finish();
     }
+
+
     /* Display timepicker dialog on button press */
     public void SetTime(View view) {
         TimePickerDialog timePicker = new TimePickerDialog(this, new TimePickerDialog.OnTimeSetListener() {
@@ -182,10 +202,14 @@ public class MenuPage extends Activity {
 
     public void UpdateSettings(View view) {
         String setting;
+        wakeupInterval=wakeupEdit.getText().toString();
+        predictionInterval=predictionEdit.getText().toString();
+        pref.edit().putString(predictKey, predictionInterval).apply();
+        pref.edit().putString(wakeupKey, wakeupInterval).apply();
         if(wakeupMin <10){
-            setting = "1."+String.valueOf(wakeupHour)+":0"+String.valueOf(wakeupMin)+";"+String.valueOf(useAlarm)+";"+String.valueOf(manualLight);
+            setting = "1."+String.valueOf(wakeupHour)+":0"+String.valueOf(wakeupMin)+";"+String.valueOf(useAlarm)+";"+String.valueOf(manualLight)+";"+wakeupInterval+";"+predictionInterval;
         } else{
-            setting = "1."+String.valueOf(wakeupHour)+":"+String.valueOf(wakeupMin)+";"+String.valueOf(useAlarm)+";"+String.valueOf(manualLight);
+            setting = "1."+String.valueOf(wakeupHour)+":"+String.valueOf(wakeupMin)+";"+String.valueOf(useAlarm)+";"+String.valueOf(manualLight)+";"+wakeupInterval+";"+predictionInterval;
         }
 
         sendMessage(setting,0);

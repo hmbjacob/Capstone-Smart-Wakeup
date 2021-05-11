@@ -20,8 +20,6 @@ from sklearn.svm import SVC
 plt.ion()
 plt.rcParams['figure.figsize'] = (16, 9)
 
-# Add no graph mode
-
 def clear_logfile(f_name):
     with open(f_name, "r+") as writer:
         writer.truncate(0)
@@ -273,6 +271,9 @@ class Sleeper:
     def sim(self, speedup, run_file):
         # Data points will be read at a rate of 1 * speedup per second
 
+        predict_begin = False
+        wake_begin = False
+
         if self.do_g == True:
             #print("Good")
             #time.sleep(10)
@@ -349,7 +350,7 @@ class Sleeper:
                 #print("Sim")
             #plt.show()
     
-    def manage(self, duration_sec, duration_wakeup_minimum):                           # manage control signals from the ECG feeding to the State Machine while asleep
+    def manage(self, duration_sec, duration_wakeup_minimum, duration_predict):                           # manage control signals from the ECG feeding to the State Machine while asleep
 
         SIZE = 1024
         pos = 0
@@ -359,6 +360,9 @@ class Sleeper:
         tupple = []
         maxim = 0
         since_last_max = 0
+        prev_5 = [0, 0, 0, 0, 0]
+        prev_5_avg = 0
+        prev_5_counter = 0
         intensity = float(0.0)
         sec_elapsed = int(0)
 
@@ -367,7 +371,9 @@ class Sleeper:
         del_t = 0
         
         start_force_wake = duration_sec - duration_wakeup_minimum
+        start_predict_time = start_force_wake - duration_predict
         trigger = False
+        predict_begin = False
         wake_begin = False
         time_wake_sec = float(duration_wakeup_minimum)
     
@@ -383,8 +389,8 @@ class Sleeper:
 
         while True: # Poll Loop
             trigger = False
-            with open('../AccelData/AccelData.txt') as reader:
-            # with open('Parse_Test/FakeAccel.txt') as reader:          # Can swap this and the above line out for the purpose of testing
+            # with open('../AccelData/AccelData.txt') as reader:
+            with open('Parse_Test/FakeAccel.txt') as reader:          # Can swap this and the above line out for the purpose of testing
                 r_lines = reader.readlines()
 
                 for line in r_lines[pos:]:
@@ -406,7 +412,22 @@ class Sleeper:
                         since_last_max = 0
                     else:
                         since_last_max = since_last_max + 1
+
+                    if (predict_begin == True):
+                        prev_5_avg = 0
+                        for jj in range(5):
+                            prev_5_avg = prev_5_avg + prev_5[jj]
+                        prev_5_avg = prev_5_avg / 5
+
+                        # This is arbitrary, one might even say Byzantine behavior
+                        if (prev_5_counter > 4) and (tupple[1] > (2 * prev_5_avg)):
+                            wake_begin = True
+                            predict_begin = False
+                            time_wake_sec = float(duration_sec - sec_elapsed)
                         
+                        prev_5[prev_5_counter % 5] = tupple[1]
+                        prev_5_counter = prev_5_counter + 1
+                    
                     # Trigger indicates a probability of wakeup beginning
                     if(tupple[1] > maxim * 0.75):
                         trigger = True
@@ -421,6 +442,9 @@ class Sleeper:
                                 
                         self.log(self.state + str(100 * (intensity/time_wake_sec))[:6])
                         self.send_com(str(self.state + str(100 * (intensity/time_wake_sec))[:6]).encode())
+
+                    if (int(sec_elapsed) >= int(start_predict_time)):
+                        predict_begin = True
 
                     if (int(sec_elapsed) >= int(start_force_wake)):
                         wake_begin = True
@@ -484,6 +508,12 @@ class Sleeper:
             # sec_elapsed = sec_elapsed + 15
         
 if __name__ == '__main__':
+
+    data_f = None
+    do_g = False
+    do_verbose = False
+    do_sim = False
+    do_live = False
     
     if (len(sys.argv) <= 1):
         print("Specify Dataset? (Y/N)")
@@ -503,6 +533,18 @@ if __name__ == '__main__':
         else:
             S1.enable_graph()
             plt.ion()
+    elif (len(sys.argv) > 1):
+        for jj in sys.argv[1:]:
+            if (jj.strip() == '-h' or jj.strip() == '--h'):
+                print("Usage: <python3 parse_data.py> or <python3 parse_data.py [-h] [-verbose] [-sim OR -live] [-file:<filename>]")
+            if (jj.strip() == '-verbose'):
+                do_verbose = False
+            if (jj.strip()[0:5] == '-file:'):
+                data_f = jj.strip()[6:]
+            if (jj.strip() == '-sim'):
+                do_sim = True
+            if (jj.strip() == '-live'):
+                do_live = True
         
     clear_logfile(S1.log_file)
     
@@ -531,7 +573,7 @@ if __name__ == '__main__':
             print("Enter minimum duration of wakeup in seconds:")
             wk_time = int(input())
             
-            S1.manage(sleep_time, wk_time)
+            S1.manage(sleep_time, wk_time, wk_time)
             S1.send_com(str(S1.state + "100.0").encode())
             S1.log(str(S1.state + "100.0"))
             time.sleep(0.25)
