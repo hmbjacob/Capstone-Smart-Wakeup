@@ -130,93 +130,88 @@ public class BluetoothConnectionService{
             intent.putExtra("data", "Nothing to see here, move along.");
             mContext.sendBroadcast(intent);
             byte[] buffer = new byte[1024];
-            int bytes;
-            File outputDir = mContext.getCacheDir();
-            String dataFile = outputDir + "/" + File.separator + "state_output.txt";
             //keep listening until exception
             while(true){
                 try {
                     //get msg from pi
-                    bytes = mmInStream.read(buffer);
+                    mmInStream.read(buffer);
                     Log.d(TAG,"inputstream received msg");
                     int opcode = (int)buffer[0];
                     switch(opcode){
                         case 50: //received OK to start receiving file contents
-                            Log.d(TAG, "before");
-                            File output;
-
-                            output = new File(dataFile);
-                            OutputStream fo;
-                            try{
-                                fo = new FileOutputStream(output,false);
-                            } catch (FileNotFoundException e) {
-                                e.printStackTrace();
-                                break;
-                            }
-                            Log.d(TAG,"file created: "+output);
-
-                            Log.d(TAG, "tell pi you want the file");
-                            byte[] sendOP = "4".getBytes(); //opcode for telling pi you received data
-                            mmOutStream.write(sendOP);
-                            int broken=0;
-                            int r=0;
-                            /*
-                            This Loop continuously receives either opcodes or chunks of data.
-                            To control data flow, waits for opcode from sender
-                             */
-                            while(broken==0 && (r=mmInStream.read(buffer))>0){
-                                Log.d(TAG, "received data, code="+(int)buffer[0]);
-                                Log.d(TAG, "len= "+r);
-                                if(r == 1) { //received opcode
-                                    if((int) buffer[0] ==4){
-                                        Log.d(TAG, "breaking out");
-                                        broken = 1;
-                                        break;
-                                    }
-                                    else{
-                                        fo.write(buffer,0,1);
-                                        Log.d(TAG, "wrote to file");
-                                        mmOutStream.write(sendOP);
-                                    }
-                                }
-                                else{ //received file contents
-                                    fo.write(buffer,0,r);
-                                    Log.d(TAG, "wrote to file");
-                                    mmOutStream.write(sendOP);
-                                }
-
-                            }
-                            fo.close();
-                            /*
-                            try {
-                                BufferedReader br = new BufferedReader(new FileReader(dataFile));
-                                String line;
-                                while ((line = br.readLine()) != null) {
-                                    System.out.println(line);
-                                }
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            */
+                            fileGet(1);
+                            fileGet(2);
                             Intent intent2 = new Intent();
                             intent2.setAction("com.example.uibasic.DONEFILE");
                             intent2.putExtra("data", "Nothing to see here, move along.");
                             mContext.sendBroadcast(intent2);
-
                             Log.d(TAG, "finished getting file");
                         case 51:
                             break;
                         case 49:
                             Log.d(TAG, "got settings opcode back");
                     }
-
                 } catch (IOException e) {
                     e.printStackTrace();
                     break;
                 }
             }
         }
-        //call from main activity to send data to server
+
+        public void fileGet(int which){
+            try {
+                byte[] buffer = new byte[1024];
+                File outputDir = mContext.getCacheDir();
+                String ending = (which == 1) ? "state_output.txt" : "accel_output.txt";
+                String dataFile = outputDir + "/" + File.separator + ending;
+                Log.d(TAG, "before");
+                File output;
+
+                output = new File(dataFile);
+                OutputStream fo;
+                try {
+                    fo = new FileOutputStream(output, false);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                    return;
+                }
+                Log.d(TAG, "file created: " + output);
+                Log.d(TAG, "tell pi you want the file");
+                byte[] sendOP = "4".getBytes(); //opcode for telling pi you received data
+                mmOutStream.write(sendOP);
+                int broken = 0;
+                int r = 0;
+                /*
+                This Loop continuously receives either opcodes or chunks of data.
+                To control data flow, waits for opcode from sender
+                 */
+                while (broken == 0 && (r = mmInStream.read(buffer)) > 0) {
+                    Log.d(TAG, "received data, code=" + (int) buffer[0]);
+                    Log.d(TAG, "len= " + r);
+                    if (r == 1) { //received opcode
+                        if ((int) buffer[0] == 4) {
+                            Log.d(TAG, "breaking out");
+                            broken = 1;
+                            break;
+                        } else {
+                            fo.write(buffer, 0, 1);
+                            Log.d(TAG, "wrote to file");
+                            mmOutStream.write(sendOP);
+                        }
+                    } else { //received file contents
+                        fo.write(buffer, 0, r);
+                        Log.d(TAG, "wrote to file");
+                        mmOutStream.write(sendOP);
+                    }
+
+                }
+                fo.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+        //call from outside thread to send data to server
         public void write(byte[] bytes){
             String text = new String(bytes,Charset.defaultCharset());
             try {

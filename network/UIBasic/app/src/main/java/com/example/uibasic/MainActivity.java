@@ -67,7 +67,10 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
     };
 
     public void pepon(){
-        unregisterReceiver(mBroadcastReceiver);
+        try {
+            unregisterReceiver(mBroadcastReceiver);
+        }catch(IllegalArgumentException ignored) {
+        }
         Intent intent = new Intent(MainActivity.this, MenuPage.class);
         startActivity(intent);
     }
@@ -143,7 +146,10 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
     protected void onDestroy() {
         Log.d(TAG, "onDestroy: called.");
         super.onDestroy();
-        unregisterReceiver(mBroadcastReceiver);
+        try {
+            unregisterReceiver(mBroadcastReceiver);
+        }catch(IllegalArgumentException ignored) {
+        }
 
     }
     //sets the list so clicking an item will select it for connection
@@ -161,17 +167,15 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 
         //create the bond.
         //NOTE: Requires API 17+? I think this is JellyBean
-        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2){
-            Log.d(TAG, "Trying to pair with " + deviceName);
-            mBTDevices.get(i).createBond();
+        Log.d(TAG, "Trying to pair with " + deviceName);
+        mBTDevices.get(i).createBond();
 
-            mBTDevice = mBTDevices.get(i);
-            //mBluetoothConnection = new BluetoothConnectionService(MainActivity.this);
-            mBluetoothConnection = BluetoothConnectionService.getInstance();
+        mBTDevice = mBTDevices.get(i);
+        //mBluetoothConnection = new BluetoothConnectionService(MainActivity.this);
+        mBluetoothConnection = BluetoothConnectionService.getInstance();
 
-            // need to set Context to use ProgressDialog.
-            mBluetoothConnection.setContext(getApplicationContext());
-            Log.d(TAG, "Paired with " + deviceName);
-        }
+        // need to set Context to use ProgressDialog.
+        mBluetoothConnection.setContext(getApplicationContext());
+        Log.d(TAG, "Paired with " + deviceName);
     }
 }

@@ -7,6 +7,7 @@ import android.content.Intent;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -24,6 +25,7 @@ import java.io.IOException;
 
 
 public class GraphPage  extends Activity {
+    private static final String TAG ="GraphPage";
     String startTime="";
     String endTime;
     TextView result;
@@ -44,7 +46,7 @@ public class GraphPage  extends Activity {
 
         File outputDir = mContext.getCacheDir();
         String dataFile = outputDir + "/" + File.separator + "state_output.txt";
-        String dataFile2 = outputDir + "/" + File.separator + "state_output.txt";
+        String dataFile2 = outputDir + "/" + File.separator + "accel_output.txt";
         double x=0,y=0;
         String[] data= {"0","0"};
         String[] time;
@@ -55,7 +57,6 @@ public class GraphPage  extends Activity {
                 System.out.println(line);
                 data=line.split(";");
                 if(data[0].equals("DEEP")) {
-
                     y=0;
                 }else{
                     y=1;
@@ -68,8 +69,8 @@ public class GraphPage  extends Activity {
                 series.appendData(new DataPoint(x,y),true,500);
             }
             endTime=data[1];
-            // custom label formatter to show currency "EUR"
-            //series.setColor(Color.BLUE);
+            double d=Double.parseDouble(startTime.split(":")[0])*60+Double.parseDouble(startTime.split(":")[1]);
+            setGraphProps(graph,d,x,1,2);
             graph.getGridLabelRenderer().setLabelFormatter(new DefaultLabelFormatter() {
                 @Override
                 public String formatLabel(double value, boolean isValueX) {
@@ -92,16 +93,55 @@ public class GraphPage  extends Activity {
                     }
                 }
             });
-            setGraphProps(graph,Double.parseDouble(startTime.split(":")[0])*60+Double.parseDouble(startTime.split(":")[1]),x,1,2);
             graph.addSeries(series);
-            //graph2.addSeries(series2);
+            Log.d(TAG, "graphed first");
+
+            br=new BufferedReader(new FileReader(dataFile2));
+            while ((line = br.readLine()) != null) {
+                data=line.split(";");
+                System.out.println(line);
+                x=Double.parseDouble(data[0]);
+                y=Double.parseDouble(data[1]);
+                series2.appendData(new DataPoint(d+x/60,y),true,2500);
+            }
+            Log.d(TAG, "wrote second");
+            series2.setColor(Color.RED);
+
+            setGraphProps(graph2,d,((int)(x/60))+d,1.8,8);
+            graph2.getGridLabelRenderer().setLabelFormatter(new DefaultLabelFormatter() {
+                @Override
+                public String formatLabel(double value, boolean isValueX) {
+                    if (isValueX) {
+                        // show normal x values
+                        double timeH=0;
+                        double timeM=value%60;
+                        if(value>timeM){
+                            timeH=(value-timeM)/60;
+                        }
+                        if(timeM > 9) {
+                            return super.formatLabel(timeH, isValueX) + ":" + super.formatLabel(timeM, isValueX);
+                        }else{
+                            return super.formatLabel(timeH, isValueX) + ":0" + super.formatLabel(timeM, isValueX);
+                        }
+                    } else {
+                        // show currency for y values
+                        return super.formatLabel(value, isValueX);
+                    }
+                }
+            });
+            graph2.addSeries(series2);
+            Log.d(TAG, "graphed second");
         } catch (IOException e) {
             Toast.makeText(GraphPage.this,"No datafile to parse :(",Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
 
         result=(TextView) findViewById(R.id.textViewRes);
-        String disp="Sleep start: "+startTime+". "+"Sleep end: "+endTime;
+        String disp;
+        if(Double.parseDouble(startTime.split(":")[1]) <10){
+            startTime=startTime.split(":")[0]+":0"+startTime.split(":")[1];
+        }
+        disp="Sleep start: "+startTime+". "+"Sleep end: "+endTime;
         result.setText(disp);
     }
 
@@ -115,7 +155,7 @@ public class GraphPage  extends Activity {
 
         graph.getViewport().setYAxisBoundsManual(true);
         graph.getViewport().setXAxisBoundsManual(true);
-        graph.getGridLabelRenderer().setNumHorizontalLabels(5);
+        //graph.getGridLabelRenderer().setNumHorizontalLabels(5);
         graph.getGridLabelRenderer().setNumVerticalLabels(vertLabels);
     }
 

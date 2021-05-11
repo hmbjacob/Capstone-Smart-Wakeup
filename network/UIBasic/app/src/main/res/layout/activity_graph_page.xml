@@ -18,12 +18,12 @@
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/graph2"
-        android:layout_width="414dp"
-        android:layout_height="188dp"
+        android:layout_width="388dp"
+        android:layout_height="202dp"
         android:layout_below="@+id/textViewMove"
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginStart="1dp"
+        android:layout_marginStart="27dp"
         android:layout_marginTop="28dp"
         android:layout_marginEnd="-4dp" />
 
@@ -31,10 +31,8 @@
         android:id="@+id/textViewRes"
         android:layout_width="400dp"
         android:layout_height="60dp"
-        android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginStart="4dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="7dp"
         android:textSize="24sp"
@@ -45,9 +43,7 @@
         android:layout_width="400dp"
         android:layout_height="60dp"
         android:layout_below="@+id/textViewRes"
-        android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginStart="3dp"
         android:layout_marginTop="0dp"
         android:layout_marginEnd="8dp"
         android:text="@string/your_sleep_states"
@@ -59,10 +55,21 @@
         android:layout_width="349dp"
         android:layout_height="wrap_content"
         android:layout_below="@+id/graph"
-        android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginStart="24dp"
         android:layout_marginTop="54dp"
-        android:layout_marginEnd="38dp"
-        android:text="@string/your_movement" />
+        android:layout_marginEnd="54dp"
+        android:text="@string/your_movement"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/textView8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewMove"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="124dp"
+        android:text="@string/m_s_2"
+        android:textSize="10sp" />
 </RelativeLayout>
