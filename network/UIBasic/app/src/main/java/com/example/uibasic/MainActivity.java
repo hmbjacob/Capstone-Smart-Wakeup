@@ -61,12 +61,8 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             Log.d(TAG, "onReceive: ACTION FOUND.");
-
-            if (action.equals(BluetoothDevice.ACTION_ACL_CONNECTED)){
-                Log.d(TAG, "onReceive: ACTION GOT.");
-                mProgressDialog.dismiss();
-                pepon();
-            }
+            mProgressDialog.dismiss();
+            pepon();
         }
     };
 

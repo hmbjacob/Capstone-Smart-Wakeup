@@ -9,4 +9,7 @@
     <string name="view_sleep_graph">View Sleep Graph</string>
     <string name="please_click_your_device_from_the_list_then_click_connect_if_the_device_is_not_visible_make_sure_you_pair_to_it_via_bt">Please click your device from the list, then click connect. If the device is not visible, make sure you pair to it via BT.</string>
     <string name="timetextview">TimeTextView</string>
+    <string name="wakeup">Wakeup</string>
+    <string name="prediction">Prediction</string>
+    <string name="set_intervals_seconds">Set intervals (seconds)</string>
 </resources>
