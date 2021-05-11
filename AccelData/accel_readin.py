@@ -86,7 +86,7 @@ while True:
     
     
     val = abs(10*Ax + 10*Ay + 10*Az - old)
-    if (val < .2): val = 0
+    if (val < .3): val = 0
     val = math.log(100000*val+1)
     avg = avg + val
     if (val > large):
