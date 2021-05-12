@@ -214,6 +214,7 @@ public class MenuPage extends Activity {
         }
 
         sendMessage(setting,0);
+        Toast.makeText(MenuPage.this,"Settings updated!",Toast.LENGTH_SHORT).show();
     }
 
     public void OpenGraph(View view) {
