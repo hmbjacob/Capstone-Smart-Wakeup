@@ -192,7 +192,7 @@ class Sleeper:
         self.ax3.autoscale_view()
         #self.ax.set_yticks(self.ax.get_yticks()[::10])
         self.ax.set_xticks(self.ax.get_xticks()[::10])
-        self.ax3.set_yticks(self.ax3.get_yticks()[::15])
+        self.ax3.set_yticks(self.ax3.get_yticks()[::25])
         #self.ax3.set_xticks(self.ax3.get_xticks()[::100])
 
         t_lines = l1 + l2
@@ -274,6 +274,20 @@ class Sleeper:
         predict_begin = False
         wake_begin = False
 
+        split_tupple = []
+
+        since_last_max = 0
+        prev_5 = [0, 0, 0, 0, 0]
+        prev_5_avg = 0
+        prev_5_counter = 0
+        
+        #sec_elapsed = int(0)
+        intensity = float(0.0)
+
+        prev_t = 0
+        cur_t = 0
+        del_t = 0
+
         if self.do_g == True:
             #print("Good")
             #time.sleep(10)
@@ -294,21 +308,32 @@ class Sleeper:
         with open(self.data_file) as reader:
             data = reader.readlines()
             wk_start = len(data) - int(float(float(self.wakeup_span) / float(self.duration)) * len(data))
+            pr_start = wk_start - int(float(float(self.wakeup_span) / float(self.duration)) * len(data))
+
+            dur = (len(data) - 2) * 60
+            t_elapsed = 0
+
+            t_wake_sec = len(data) - wk_start - 1
+
             print(wk_start)
             print(len(data))
             
             elapsed = 0
-            intensity = 0
+            #intensity = 0
             for line in data[1:-1]:
                 time.sleep(1/speedup)
-                elapsed = elapsed + 1
+
                 split_tupple = line.split(';')
                 split_tupple[1] = split_tupple[1][:-1]
+                elapsed = elapsed + 1
+                t_elapsed = int(split_tupple[0])
+                # TODO swap from elapsed to t_elapsed
+                
                 print(split_tupple[1])
                 #split_tupple[1] = split_tupple[1].split('\n')[0]
 
                 if self.do_g == True:
-                    linez.set_xdata(np.append(linez.get_xdata(), float(elapsed)))
+                    linez.set_xdata(np.append(linez.get_xdata(), float(t_elapsed)))
                     linez.set_ydata(np.append(linez.get_ydata(), float(split_tupple[1])))
 
                 self.fill_bucket(elapsed, float(split_tupple[1]))
@@ -324,8 +349,30 @@ class Sleeper:
                     self.send_com(str(self.state + str(100 * (intensity / (len(data)-wk_start-1)))[:6]).encode())
 
                 if self.do_g == True:
-                    line_intensity.set_xdata(np.append(line_intensity.get_xdata(), elapsed))
+                    line_intensity.set_xdata(np.append(line_intensity.get_xdata(), t_elapsed))
+
+                if elapsed >= pr_start:
+                    predict_begin = True
+
+                if predict_begin == True:
+                    prev_5_avg = 0
+                    for jj in range(5):
+                        prev_5_avg = prev_5_avg + prev_5[jj]
+                    prev_5_avg = prev_5_avg / 5
+
+                    if(prev_5_counter > 4) and (split_tupple[1] > (2 * prev_5_avg)):
+                        wake_begin = True
+                        predict_begin = False
+                        t_wake_sec = float(dur - t_elapsed)
+
+                    prev_5[prev_5_counter % 5] = float(split_tupple[1])
+                    prev_5_coutner = prev_5_counter + 1
+
                 if elapsed >= wk_start:
+                    predict_begin = False
+                    wake_begin = True
+                
+                if wake_begin == True:
                     val = intensity / (len(data) - wk_start - 1)
                     if self.do_g == True:
                         line_intensity.set_ydata(np.append(line_intensity.get_ydata(), (intensity / (len(data) - wk_start - 1))))
@@ -389,8 +436,8 @@ class Sleeper:
 
         while True: # Poll Loop
             trigger = False
-            # with open('../AccelData/AccelData.txt') as reader:
-            with open('Parse_Test/FakeAccel.txt') as reader:          # Can swap this and the above line out for the purpose of testing
+            with open('../AccelData/AccelData.txt') as reader:
+            # with open('Parse_Test/FakeAccel.txt') as reader:          # Can swap this and the above line out for the purpose of testing
                 r_lines = reader.readlines()
 
                 for line in r_lines[pos:]:
