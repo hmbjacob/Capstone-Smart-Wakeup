@@ -1,0 +1,17 @@
+# parse_data.py can be run in either interactive or command line mode; to use interactive mode provide no additional arugments while running the program.
+# To run the program in one line the following flags are accepted
+
+python3 parse_data.py [-verbose] [-no_g] [-sim : -live] [-file:<filename>] [-t:<sleep time>] [-p:<prediction window>] [-w:<wakeup timespan>]
+
+# One of -sim or -live must be present, all other arguments are technically optional
+# no_g		=> Disable the interactive graph, which will greatly improve performance
+# sim		=> Run the simulation, if no file is specified the default file is chosen
+# live		=> Live interpretation of incoming data writtin to a specified file
+# file		=> Specifies a dataset to use if a simulation
+# t		=> time in seconds for the sleep cycle
+# p 		=> time in seconds for the prediction window
+# w		=> time in seconds for the actual wakeup 
+
+For example, for an 8 hour run the following is recommended:
+
+python3 parse_data.py -live -t:28800 -p:1800 -w:1800

@@ -559,8 +559,16 @@ if __name__ == '__main__':
     data_f = None
     do_g = False
     do_verbose = False
-    do_sim = False
-    do_live = False
+    dot_sim = False
+    dot_live = False
+    do_sim = ''
+    g_flag = False
+    use_argv = False
+    
+
+    sleeper_time = 0
+    wake_time = 0
+    pred_time = 0
     
     if (len(sys.argv) <= 1):
         print("Specify Dataset? (Y/N)")
@@ -581,23 +589,62 @@ if __name__ == '__main__':
             S1.enable_graph()
             plt.ion()
     elif (len(sys.argv) > 1):
+        use_argv = True
         for jj in sys.argv[1:]:
             if (jj.strip() == '-h' or jj.strip() == '--h'):
-                print("Usage: <python3 parse_data.py> or <python3 parse_data.py [-h] [-verbose] [-sim OR -live] [-file:<filename>]")
+                print("Usage: <python3 parse_data.py> or <python3 parse_data.py [-h] [-verbose] [-no_g] [-sim OR -live] [-file:<filename>] [-t:<time[s]>] [-p:<time[s]>] [-w:<time[s]>]")
             if (jj.strip() == '-verbose'):
-                do_verbose = False
+                do_verbose = True
+            if (jj.strip() == '-no_g'):
+                g_flag = True
             if (jj.strip()[0:5] == '-file:'):
                 data_f = jj.strip()[6:]
             if (jj.strip() == '-sim'):
-                do_sim = True
+                dot_sim = True
             if (jj.strip() == '-live'):
-                do_live = True
+                dot_live = True
+            if (jj.strip()[0:2] == '-t'):
+                sleeper_time = int(jj.strip()[3:])
+            if (jj.strip()[0:2] == '-p'):
+                pred_time = int(jj.strip()[3:])
+            if (jj.strip()[0:2] == '-w'):
+                wake_time = int(jj.strip()[3:])
+
+        print(sleeper_time)
+        print(pred_time)
+        print(wake_time)
+        time.sleep(5)
+
+        if data_f is not None:
+            S1 = Sleeper(100, data_f, "sleep_config.txt")
+        else:
+            S1 = Sleeper(100, "__no__", "sleep_config.txt")
+
+        if (g_flag == True):
+            S1.disable_graph()
+        else:
+            S1.enable_graph()
+            plt.ion()
+    
         
     clear_logfile(S1.log_file)
+
+    dset = []
+    with open('config.txt', 'r') as reader:
+        dset = reader.readline().split(';')
+
+    if (wake_time > 0 and pred_time > 0):
+        print(dset[3])
+        print(dset[4])
+        pred_time = int(dset[3])
+        wake_time = int(dset[4])
     
     while True:
-        print("Run Simulation or Live Transfer? (S/L)")
-        do_sim = str(input())
+
+        if use_argv == False:
+            print("Run Simulation or Live Transfer? (S/L)")
+            do_sim = str(input())
+            
         S1.send_com("DONE 0".encode())
         time.sleep(0.25)
         if do_g != 'n' and do_sim != 'N':
@@ -606,7 +653,7 @@ if __name__ == '__main__':
         # S1.manage
         S1.log(str("DONE 0"))
         
-        if do_sim == 'y' or do_sim == 'Y' or do_sim == 's' or do_sim == 'S':
+        if do_sim == 'y' or do_sim == 'Y' or do_sim == 's' or do_sim == 'S' or dot_sim == True:
             S1.sim(10000, "datasets/hrv_fake_4.txt")
             S1.send_com(str(S1.state + "100.0").encode())
             S1.log(str(S1.state + "100.0"))
@@ -614,15 +661,19 @@ if __name__ == '__main__':
             S1.send_com("DONE 100.0".encode())
             S1.log("DONE 100.0")
             
-        elif do_sim == 'n' or do_sim == 'N' or do_sim == 'l' or do_sim == 'L':
-            print("Enter duration of sleep in seconds:")
-            sleep_time = int(input())
-            print("Enter minimum duration of wakeup in seconds:")
-            wk_time = int(input())
+        elif do_sim == 'n' or do_sim == 'N' or do_sim == 'l' or do_sim == 'L' or dot_live == True:
+
+            if use_argv == False:
+                print("Enter duration of sleep in seconds:")
+                sleep_time = int(input())
+                print("Enter minimum duration of wakeup in seconds:")
+                wake_time = int(input())
             
-            S1.manage(sleep_time, wk_time, wk_time)
+            S1.manage(sleeper_time, wake_time, pred_time)
             S1.send_com(str(S1.state + "100.0").encode())
             S1.log(str(S1.state + "100.0"))
             time.sleep(0.25)
             S1.send_com("DONE 100.0".encode())
             S1.log("DONE 100.0")
+            
+        input()
