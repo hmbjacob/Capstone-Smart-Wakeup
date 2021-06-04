@@ -1,3 +1,5 @@
 # dreamteam9
-dream team 9
-all C's, everyone barely graduates
+Dawn Light CSE 123 Capstone Project:
+
+network: contains App and pi server
+StateMachine: contains data parsing algs
