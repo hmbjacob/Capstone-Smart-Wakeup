@@ -1,3 +1,0 @@
-(sym_lib_table
-  (lib (name uECG_rev4-rescue)(type Legacy)(uri ${KIPRJMOD}/uECG_rev4-rescue.lib)(options "")(descr ""))
-)
