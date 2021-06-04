@@ -30,6 +30,8 @@ if __name__ == '__main__':
     rets.append(output)
     output = subprocess.call(["sudo", "./StateM"])
     rets.append(output)
+    output = subprocess.call(["python3", "/home/pi/dreamteam9/network/serv.py"])
+    rets.append(output)
     # Anything else that needs to be ran... order might be different too...
 
     for entries in rets:
